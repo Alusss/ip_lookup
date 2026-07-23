@@ -166,7 +166,29 @@ acme.sh --install-cert -d ip6.iohow.com \
 ```
 
 **⚠️ 关键配置：真实 IP 传递**
-Nginx 和 Go 后端在同一台机器上时，Go 看到的 `RemoteAddr` 为 `127.0.0.1`。Nginx 配置已通过 `proxy_set_header X-Forwarded-For $remote_addr` 和 `proxy_set_header CF-Connecting-IP $http_cf_connecting_ip` 将真实 IP 转发给后端。**后端必须将本地代理加入可信列表**（已在 `config.yaml` 中设置 `trusted_proxy_cidrs: "127.0.0.1/32,::1/128"`），否则 Go 不会信任转发过来的 IP 头。
+Nginx 和 Go 后端在同一台机器上时，Go 看到的 `RemoteAddr` 为 `127.0.0.1`。Nginx 配置通过以下三个 `proxy_set_header` 将客户端信息转发给后端：
+
+```nginx
+proxy_set_header Host $host;                              # 保持原始 Host
+proxy_set_header X-Forwarded-For $remote_addr;            # 原始连接真实 IP（最右跳）
+proxy_set_header CF-Connecting-IP $http_cf_connecting_ip; # Cloudflare 原始客户端 IP
+```
+
+**后端必须将本地代理加入可信列表**（已在 `config.yaml` 中设置 `trusted_proxy_cidrs: "127.0.0.1/32,::1/128"`），否则 Go 不会信任转发过来的 IP 头。
+
+**🩺 健康检查端点绕过限流**
+监控系统（Prometheus Blackbox、systemd healthchecks）会持续请求 `/health` 和 `/readyz`。这两个 location 块显式声明了 `limit_req off`，避免被限流误杀导致误报警。
+
+**🔒 安全头**
+Nginx 层额外施加了 `Permissions-Policy: camera=(), microphone=(), geolocation=()`，限制浏览器 API 权限（与 Go 层的安全头互补，Go 不覆盖 Nginx 已发出的头）。
+
+**🔁 Upstream 被动健康检查**
+```nginx
+upstream backend_v4 {
+    server 127.0.0.1:8080 max_conns=256 max_fails=3 fail_timeout=10s;
+}
+```
+Nginx 开源版无主动健康检查模块，通过 `max_fails=3 fail_timeout=10s` 实现被动容错：连续 3 次失败后将该后端标记为不可用 10 秒。配合 `keepalive 32` 复用连接。
 
 **Nginx 与 Caddy 对比**：
 
@@ -175,6 +197,7 @@ Nginx 和 Go 后端在同一台机器上时，Go 看到的 `RemoteAddr` 为 `127
 | TLS 证书 | 自动（Cloudflare DNS-01） | 手动，需额外部署 acme.sh |
 | 真实 IP 传递 | 内置 `client_ip_headers` 指令 | 需手动配置 `proxy_set_header` |
 | 主动健康检查 | 内置 `health_uri` | 仅被动检查（`max_fails`），开源版无主动检查 |
+| 安全头 | `header` 指令 | `add_header` 指令，需逐一声明 |
 | 配置复杂度 | 低 | 中 |
 
 > 切换到 Nginx 后如需回退到 Caddy，只需：1. 安装 Caddy + cloudflare DNS 插件；2. 复制 `deploy/caddy/Caddyfile`；3. 修改 Go 配置 `trusted_proxy_cidrs` 为空（Caddy 通过 trusted_proxies 模块处理真实 IP 传递）。

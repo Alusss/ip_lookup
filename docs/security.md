@@ -5,7 +5,7 @@
 | 层级 | 组件 | 防御措施 |
 |------|------|----------|
 | L1 CDN | Cloudflare | WAF、DDoS 防护、边缘速率限制、TLS 终止 |
-| L2 Web 服务器 / CDN 头 | Caddy / Nginx / _headers | 真实 IP 还原、前置限流、安全 Header（含 CSP）、请求体拒绝 |
+| L2 Web 服务器 / CDN 头 | Caddy / Nginx / _headers | 真实 IP 还原、前置限流、安全 Header（CSP + Permissions-Policy + HSTS）、请求体拒绝 |
 | L3 Go 应用 | ip-lookup | IP 信任链、应用层限流、黑名单（IP+UA+CIDR）、Panic 恢复、超时控制、并发安全（atomic/mutex）、安全响应头、请求 ID 追踪 |
 | L4 系统 | systemd + nftables | 资源隔离（systemd hardening）、源站防火墙（仅 CF CIDR） |
 
@@ -73,6 +73,7 @@ flowchart TD
 |中间件链 | 11 层顺序执行 | requestID → recovery → securityHeaders → metrics → methodCheck → bodyRejection → denylist → connLimit → cors → logging |
 |请求 ID 追踪 | 8 字节随机 hex | `X-Request-ID` header 入/出，日志中无此 ID 但可用于下游关联 |
 |安全响应头 | Go 中间件层覆写 | `X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`，不等同依赖于反向代理 |
+| Nginx 安全头（备用代理层） | Nginx `add_header` | `Permissions-Policy`（浏览器 API 权限限制）、`Cache-Control` 健康检查端点 |
 
 ---
 
