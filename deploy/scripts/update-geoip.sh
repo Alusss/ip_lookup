@@ -40,17 +40,18 @@ mkdir -p "${DEST_DIR}"
 echo "[INFO] Downloading ${EDITION} database..."
 STATUS=""
 for attempt in $(seq 1 "${MAX_RETRIES}"); do
-	STATUS=$(curl -sS --fail --max-time 120 \
+	STATUS=$(curl -sS -L --fail --max-time 120 \
 		-o "${TEMP_DIR}/${EDITION}.tar.gz" \
 		-w "%{http_code}" \
-		"${DOWNLOAD_URL}?edition_id=${EDITION}&license_key=${LICENSE_KEY}&suffix=tar.gz" 2>/dev/null) && break
+		"${DOWNLOAD_URL}?edition_id=${EDITION}&license_key=${LICENSE_KEY}&suffix=tar.gz") && {
+		DOWNLOAD_OK=1
+		break
+	}
 	echo "[WARN] Download attempt ${attempt}/${MAX_RETRIES} failed (HTTP ${STATUS:-timeout}), retrying in ${RETRY_DELAY}s..." >&2
-	if [ "${attempt}" -lt "${MAX_RETRIES}" ]; then
-		sleep "${RETRY_DELAY}"
-		RETRY_DELAY=$((RETRY_DELAY * 2))
-	fi
+	sleep "${RETRY_DELAY}"
+	RETRY_DELAY=$((RETRY_DELAY * 2))
 done
-if [ $? -ne 0 ] && [ "${attempt}" -eq "${MAX_RETRIES}" ]; then
+if [ -z "${DOWNLOAD_OK:-}" ]; then
 	echo "[ERROR] Download failed after ${MAX_RETRIES} attempts" >&2
 	exit 1
 fi
