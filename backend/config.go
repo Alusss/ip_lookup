@@ -162,13 +162,14 @@ func LoadConfig(path string) (*Config, error) {
 	cfg.configPath = path
 
 	data, err := os.ReadFile(path)
-	if err == nil {
-		if len(data) > maxConfigSize {
-			return nil, fmt.Errorf("config file too large: %d bytes (max %d)", len(data), maxConfigSize)
-		}
-		if err := yaml.Unmarshal(data, cfg); err != nil {
-			return nil, fmt.Errorf("parse config: %w", err)
-		}
+	if err != nil {
+		return nil, fmt.Errorf("read config file %s: %w", path, err)
+	}
+	if len(data) > maxConfigSize {
+		return nil, fmt.Errorf("config file too large: %d bytes (max %d)", len(data), maxConfigSize)
+	}
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
 	overrideFromEnv(cfg)

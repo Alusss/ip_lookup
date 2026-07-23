@@ -7,8 +7,8 @@
   // ===================================================
   var SITE_CONFIG = {
     email: 'admin@example.com',           // 联系邮箱（中英文界面均显示）
-    icp: '京ICP备XXXXXXXX号-X',            // ICP 备案号（仅中文界面显示）
-    gongan: '京公网安备 XXXXXXXXXXXXXX 号', // 公安备案号（仅中文界面显示）
+    icp: '湘ICP备18010752号-2',            // ICP 备案号（仅中文界面显示）
+    gongan: '湘公网安备43010402002914号', // 公安备案号（仅中文界面显示）
   };
 
   var I18N = {
@@ -111,9 +111,9 @@
       if (isZh && (SITE_CONFIG.icp || SITE_CONFIG.gongan)) {
         filingDiv.classList.remove('hidden');
         var parts = [];
-        if (SITE_CONFIG.icp) parts.push(SITE_CONFIG.icp);
-        if (SITE_CONFIG.gongan) parts.push(SITE_CONFIG.gongan);
-        filingDiv.textContent = parts.join(' | ');
+        if (SITE_CONFIG.icp) parts.push('<span>' + SITE_CONFIG.icp + '</span>');
+        if (SITE_CONFIG.gongan) parts.push('<span><img src="img/gonganbeian.png" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:3px">' + SITE_CONFIG.gongan + '</span>');
+        filingDiv.innerHTML = parts.join(' | ');
       } else {
         filingDiv.classList.add('hidden');
       }
