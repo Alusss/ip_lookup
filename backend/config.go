@@ -82,7 +82,7 @@ type ConfigValues struct {
 }
 
 type Config struct {
-	ConfigValues
+	ConfigValues `yaml:",inline"`
 
 	configPath string
 	mu         sync.RWMutex
