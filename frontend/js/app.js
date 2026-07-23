@@ -10,10 +10,11 @@
 
   var ipDisplay = document.getElementById('ip-address');
   var statusMsg = document.getElementById('status-msg');
+  var geoLine = document.getElementById('geo-line');
   var copyBtn = document.getElementById('copy-btn');
   var refreshBtn = document.getElementById('refresh-btn');
-  var ipv6Btn = document.getElementById('ipv6-btn');
-  var ipv6Content = document.getElementById('ipv6-content');
+  var ipv6Address = document.getElementById('ipv6-address');
+  var ipv6Status = document.getElementById('ipv6-status');
   var ipv4Card = document.getElementById('ipv4-card');
   var ipv6Card = document.getElementById('ipv6-card');
   var adBar = document.getElementById('ad-bar');
@@ -28,6 +29,7 @@
   var lastIp = '';
   var lastFetchTime = 0;
   var ipv6State = 'idle';
+  var geoFetched = false;
 
   if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
@@ -81,7 +83,7 @@
       ipv4Card.classList.remove('loading');
       setTimeout(function () {
         if (ipState === 'success') statusMsg.className = 'status-msg idle';
-      }, 1500);
+      }, 2500);
     } else if (state === 'error') {
       ipDisplay.textContent = lastIp || '--';
       ipDisplay.className = 'ip-address';
@@ -105,8 +107,23 @@
       statusMsg.textContent = t('throttled');
       setTimeout(function () {
         if (ipState === 'throttled') statusMsg.className = 'status-msg idle';
-      }, 2000);
+      }, 2500);
     }
+  }
+
+  function fetchGeo(ip) {
+    if (geoFetched || !ip) return;
+    geoFetched = true;
+    fetch(IP4_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
+      .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
+      .then(function (data) {
+        if (!data || !geoLine) return;
+        var parts = [];
+        if (data.city) parts.push(data.city);
+        if (data.country) parts.push(data.country);
+        if (parts.length) geoLine.textContent = parts.join(', ');
+      })
+      .catch(function () { /* geo is non-critical, fail silently */ });
   }
 
   function fetchIp() {
@@ -128,11 +145,37 @@
         lastIp = ip;
         lastFetchTime = Date.now();
         setIpState('success');
+        fetchGeo(ip);
       })
       .catch(function (err) {
         clearTimeout(timeoutId);
         setIpState(err.name === 'AbortError' ? 'timeout' : 'error');
       });
+  }
+
+  function setIpv6State(state, ip) {
+    ipv6State = state;
+    ipv6Status.className = 'status-msg';
+    ipv6Status.textContent = '';
+
+    if (state === 'loading') {
+      ipv6Address.textContent = t('ipv6_testing');
+      ipv6Address.className = 'ip-address loading';
+    } else if (state === 'success') {
+      ipv6Address.textContent = ip;
+      ipv6Address.className = 'ip-address';
+      ipv6Status.className = 'status-msg success';
+      ipv6Status.textContent = t('ipv6_supported');
+      ipv6Card.classList.remove('loading');
+      ipv6Card.classList.add('tested');
+    } else if (state === 'fail') {
+      ipv6Address.textContent = '--';
+      ipv6Address.className = 'ip-address loading';
+      ipv6Status.className = 'status-msg error';
+      ipv6Status.textContent = t('ipv6_not_supported');
+      ipv6Card.classList.remove('loading');
+      ipv6Card.classList.add('tested');
+    }
   }
 
   function fetchIpv6() {
@@ -141,12 +184,10 @@
     var controller = newAbortController();
     var timeoutId = setTimeout(function () {
       controller.abort();
-      ipv6State = 'fail';
-      setIpv6Result('fail', t('ipv6_fail'));
+      setIpv6State('fail');
     }, FETCH_TIMEOUT_IP6);
 
-    ipv6State = 'loading';
-    setIpv6Result('loading', t('ipv6_checking'));
+    setIpv6State('loading');
 
     fetch(IP6_API, { headers: { 'X-Client': 'web' }, signal: controller.signal })
       .then(function (response) {
@@ -157,31 +198,12 @@
       .then(function (text) {
         var ip = text.trim();
         if (!ip) throw new Error('Empty response');
-        ipv6State = 'success';
-        setIpv6Result('success', t('ipv6_success').replace('{ip}', ip));
+        setIpv6State('success', ip);
       })
-      .catch(function (err) {
+      .catch(function () {
         clearTimeout(timeoutId);
-        ipv6State = 'fail';
-        setIpv6Result('fail', t('ipv6_fail'));
+        setIpv6State('fail');
       });
-  }
-
-  function setIpv6Result(state, msg) {
-    var el = document.getElementById('ipv6-result') || ipv6Content;
-    el.className = 'ipv6-result ' + state;
-    el.textContent = msg;
-
-    ipv6Card.classList.remove('loading');
-    if (state !== 'idle' && state !== 'loading') {
-      ipv6Card.classList.add('tested');
-    }
-
-    var btn = ipv6Btn;
-    if (btn) {
-      btn.classList.remove('loading');
-      btn.disabled = false;
-    }
   }
 
   function newAbortController() {
@@ -233,10 +255,6 @@
 
   if (copyBtn) copyBtn.addEventListener('click', handleCopy);
   if (refreshBtn) refreshBtn.addEventListener('click', handleRefresh);
-  if (ipv6Btn) ipv6Btn.addEventListener('click', function () {
-    if (ipv6State === 'loading') return;
-    fetchIpv6();
-  });
   window.addEventListener('online', handleOnline);
 
   handleAdBar();

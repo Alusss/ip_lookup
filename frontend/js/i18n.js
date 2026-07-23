@@ -1,6 +1,15 @@
 (function () {
   'use strict';
 
+  // Kill English flash for zh users: hide page until i18n applies.
+  // Runs synchronously in <head> before first paint. Safety timeout
+  // guarantees reveal even if DOMContentLoaded is delayed.
+  var __lang = (navigator.language || '').toLowerCase();
+  if (__lang.indexOf('zh') === 0) {
+    document.documentElement.style.visibility = 'hidden';
+    setTimeout(function () { document.documentElement.style.visibility = ''; }, 400);
+  }
+
   // ===================================================
   // 站点可配置信息 / Site Configurable Data
   // 修改此处即可更新全局占位信息，后续替换成你自己的数据
@@ -30,11 +39,10 @@
       error: '获取 IP 地址失败，请稍后重试',
       timeout: '请求超时，请检查网络',
       throttled: '已是最新结果，请稍后刷新',
-      ipv6_title: 'IPv6 地址',
-      ipv6_subtitle: '自动检测中',
-      ipv6_checking: '正在检测 IPv6 连接...',
-      ipv6_success: '你的 IPv6 地址：{ip}',
-      ipv6_fail: '你的网络未启用 Internet IPv6',
+      ipv6_label: 'IPv6 地址',
+      ipv6_testing: '正在检测...',
+      ipv6_supported: 'IPv6 连接正常',
+      ipv6_not_supported: '未检测到 IPv6 连接',
       privacy: '隐私政策',
       learn_ipv6: '了解 IPv6',
       email_label: '📧 邮箱',
@@ -57,11 +65,10 @@
       error: 'Failed to get IP address. Please try again later.',
       timeout: 'Request timed out. Please check your network.',
       throttled: 'Already up to date. Please try later.',
-      ipv6_title: 'IPv6 Address',
-      ipv6_subtitle: 'Automatically detected',
-      ipv6_checking: 'Testing IPv6 connection...',
-      ipv6_success: 'Your IPv6 address: {ip}',
-      ipv6_fail: 'Your network does not support IPv6 connectivity',
+      ipv6_label: 'IPv6 Address',
+      ipv6_testing: 'Testing...',
+      ipv6_supported: 'IPv6 connectivity available',
+      ipv6_not_supported: 'No IPv6 connectivity detected',
       privacy: 'Privacy Policy',
       learn_ipv6: 'Learn about IPv6',
       email_label: '📧 Email',
@@ -108,16 +115,30 @@
 
     var filingDiv = document.getElementById('footer-filing');
     if (filingDiv) {
+      filingDiv.textContent = '';
       if (isZh && (SITE_CONFIG.icp || SITE_CONFIG.gongan)) {
         filingDiv.classList.remove('hidden');
-        var parts = [];
-        if (SITE_CONFIG.icp) parts.push('<span>' + SITE_CONFIG.icp + '</span>');
-        if (SITE_CONFIG.gongan) parts.push('<span><img src="img/gonganbeian.png" alt="" style="width:16px;height:16px;vertical-align:middle;margin-right:3px">' + SITE_CONFIG.gongan + '</span>');
-        filingDiv.innerHTML = parts.join(' | ');
+        if (SITE_CONFIG.icp) {
+          var s1 = document.createElement('span');
+          s1.textContent = SITE_CONFIG.icp;
+          filingDiv.appendChild(s1);
+        }
+        if (SITE_CONFIG.gongan) {
+          if (filingDiv.childNodes.length) filingDiv.appendChild(document.createTextNode(' | '));
+          var s2 = document.createElement('span');
+          var img = document.createElement('img');
+          img.src = 'img/gonganbeian.png';
+          img.alt = '';
+          s2.appendChild(img);
+          s2.appendChild(document.createTextNode(SITE_CONFIG.gongan));
+          filingDiv.appendChild(s2);
+        }
       } else {
         filingDiv.classList.add('hidden');
       }
     }
+
+    document.documentElement.style.visibility = '';
   }
 
   window.getLang = getLang;

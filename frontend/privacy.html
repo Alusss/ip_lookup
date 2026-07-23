@@ -1,57 +1,67 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title data-i18n="privacy_title">Privacy Policy - IP Lookup</title>
+<title>Privacy Policy - IP Lookup</title>
+<meta name="description" content="Privacy policy for IP Lookup. We do not collect, store, or share personal identifiable information.">
+<link rel="canonical" href="https://ip.iohow.com/privacy">
+<link rel="stylesheet" href="/css/base.css">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-secondary:#94a3b8;--accent:#3b82f6;--border:#334155;--radius:12px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif}
-body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
-.container{max-width:720px;margin:0 auto;padding:48px 24px}
-h1{font-size:28px;margin-bottom:8px}
+.container{max-width:720px;margin:0 auto;padding:24px 24px 48px}
+article h1{margin-bottom:8px}
 p.date{color:var(--text-secondary);font-size:14px;margin-bottom:32px}
-h2{font-size:20px;margin-top:32px;margin-bottom:12px}
-p,li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
-ul{padding-left:20px;margin-bottom:16px}
-a{color:var(--accent);text-decoration:none}
-a:hover{text-decoration:underline}
+article h2{font-size:20px;margin-top:32px;margin-bottom:12px}
+article p,article li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
+article ul{padding-left:20px;margin-bottom:16px}
+article strong{color:var(--text)}
 .back{margin-top:40px}
-@media(prefers-color-scheme:light){:root{--bg:#f8fafc;--bg-card:#ffffff;--text:#0f172a;--text-secondary:#64748b;--border:#e2e8f0}}
 </style>
 </head>
 <body>
+<header class="topbar">
+  <a href="/" class="topbar-brand" aria-label="IP Lookup home">
+    <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="2"/>
+      <circle cx="18" cy="18" r="6" fill="currentColor"/>
+      <path d="M18 2v6M18 28v6M2 18h6M28 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span>IP Lookup</span>
+  </a>
+</header>
 <div class="container">
-  <h1>Privacy Policy</h1>
-  <p class="date">Last updated: July 22, 2026</p>
+  <article>
+    <h1>Privacy Policy</h1>
+    <p class="date">Last updated: July 22, 2026</p>
 
-  <h2>Data Collection</h2>
-  <p>IP Lookup does not collect, store, or share any personal identifiable information (PII).</p>
-  <ul>
-    <li><strong>IP Addresses</strong>: Your IP address is used solely to display the lookup result. It is not logged, stored, or persisted in any database.</li>
-    <li><strong>Request Logs</strong>: Operational logs contain masked IP addresses (e.g., 203.0.113.0 for IPv4) and are retained for a maximum of 30 days for security monitoring purposes only.</li>
-    <li><strong>No Cookies</strong>: This site does not use cookies, localStorage, or any client-side tracking technology.</li>
-    <li><strong>No Analytics Cookies</strong>: We use Cloudflare Web Analytics, a privacy-first analytics tool that does not use cookies or collect PII.</li>
-  </ul>
+    <h2>Data Collection</h2>
+    <p>IP Lookup does not collect, store, or share any personal identifiable information (PII).</p>
+    <ul>
+      <li><strong>IP Addresses</strong>: Your IP address is used solely to display the lookup result. It is not logged, stored, or persisted in any database.</li>
+      <li><strong>Request Logs</strong>: Operational logs contain masked IP addresses (e.g., 203.0.113.0 for IPv4) and are retained for a maximum of 30 days for security monitoring purposes only.</li>
+      <li><strong>No Cookies</strong>: This site does not use cookies, localStorage, or any client-side tracking technology.</li>
+      <li><strong>No Analytics Cookies</strong>: We use Cloudflare Web Analytics, a privacy-first analytics tool that does not use cookies or collect PII.</li>
+    </ul>
 
-  <h2>Data Sharing</h2>
-  <p>We do not sell, trade, or share your data with third parties. API responses are sent directly to your browser and are not cached or recorded.</p>
+    <h2>Data Sharing</h2>
+    <p>We do not sell, trade, or share your data with third parties. API responses are sent directly to your browser and are not cached or recorded.</p>
 
-  <h2>Third-Party Services</h2>
-  <p>This service uses Cloudflare as CDN and DNS provider. Cloudflare's privacy policy applies to their edge network processing. We do not control what data Cloudflare collects at their edge.</p>
+    <h2>Third-Party Services</h2>
+    <p>This service uses Cloudflare as CDN and DNS provider. Cloudflare's privacy policy applies to their edge network processing. We do not control what data Cloudflare collects at their edge.</p>
 
-  <h2>Your Rights (GDPR)</h2>
-  <p>If you are in the European Economic Area (EEA), you have the right to:</p>
-  <ul>
-    <li>Access your data (we hold none)</li>
-    <li>Request deletion of your data (nothing to delete)</li>
-    <li>Object to processing (no processing occurs)</li>
-  </ul>
+    <h2>Your Rights (GDPR)</h2>
+    <p>If you are in the European Economic Area (EEA), you have the right to:</p>
+    <ul>
+      <li>Access your data (we hold none)</li>
+      <li>Request deletion of your data (nothing to delete)</li>
+      <li>Object to processing (no processing occurs)</li>
+    </ul>
 
-  <h2>Contact</h2>
-  <p>For privacy-related inquiries, please open an issue on our <a href="https://github.com/{{ORG}}/ip-lookup">GitHub repository</a>.</p>
+    <h2>Contact</h2>
+    <p>For privacy-related inquiries, please <a href="mailto:admin@example.com">email us</a>.</p>
 
-  <div class="back"><a href="/">&larr; Back to IP Lookup</a></div>
+    <div class="back"><a href="/">&larr; Back to IP Lookup</a></div>
+  </article>
 </div>
 </body>
 </html>
