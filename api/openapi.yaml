@@ -1,0 +1,144 @@
+openapi: "3.1.0"
+info:
+  title: IP Lookup API
+  description: |
+    IP 查询 API，支持纯文本和 JSON 两种响应格式。
+    - `ip4.iohow.com`（仅 A 记录）与 `ip6.iohow.com`（仅 AAAA 记录）均走 `GET /`。
+    - 前端 fetch 需携带 `X-Client: web` 头以获取纯 IP 响应。
+    - 携带 `Accept: application/json` 头可获取 JSON 格式响应（含地理位置信息，若已启用 GeoIP）。
+  version: "1.1.0"
+servers:
+  - url: https://ip4.iohow.com
+    description: IPv4 API
+  - url: https://ip6.iohow.com
+    description: IPv6 API
+paths:
+  /:
+    get:
+      summary: 获取客户端 IP 地址
+      description: >
+        根据请求头返回不同格式：
+        - `X-Client: web` → 总是返回纯 IP
+        - `Accept: application/json` → 返回 JSON 格式
+        - 其他 → 根据广告开关返回纯 IP 或带广告的文本
+      parameters:
+        - name: X-Client
+          in: header
+          required: false
+          schema:
+            type: string
+            enum: [web]
+          description: 前端 fetch 携带此头则返回纯 IP
+        - name: Accept
+          in: header
+          required: false
+          schema:
+            type: string
+          description: 含 `application/json` 时返回 JSON（需启用 json_api_enabled）
+      responses:
+        "200":
+          description: 成功
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "203.0.113.42"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ip:
+                    type: string
+                  version:
+                    type: string
+                    enum: [IPv4, IPv6]
+                  city:
+                    type: string
+                  country:
+                    type: string
+                  isp:
+                    type: string
+              example:
+                ip: "203.0.113.42"
+                version: "IPv4"
+                city: "Los Angeles"
+                country: "United States"
+                isp: "Example ISP"
+        "400":
+          description: 请求不合法
+        "429":
+          description: 限流触发
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+        "500":
+          description: 内部错误
+        "503":
+          description: 服务不可用
+  /ad-config:
+    get:
+      summary: 前端广告配置
+      description: |
+        返回前端 Web 页面顶栏广告的配置（文本、链接、启用状态）。
+        前端页面在加载时调用此接口动态渲染广告栏。
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          schema:
+            type: string
+          description: 用于决定返回中/英文广告文案
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  web:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                      text:
+                        type: string
+                      url:
+                        type: string
+              example:
+                web:
+                  enabled: true
+                  text: "推荐使用可靠的VPN服务保护您的隐私"
+                  url: "https://example.com/zh/vpn"
+  /health:
+    get:
+      summary: 存活检查
+      responses:
+        "200":
+          description: 正常
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+        "503":
+          description: 异常
+  /readyz:
+    get:
+      summary: 就绪检查
+      responses:
+        "200":
+          description: 就绪
+        "503":
+          description: 未就绪
+  /metrics:
+    get:
+      summary: Prometheus 指标
+      responses:
+        "200":
+          description: Prometheus 文本格式指标
+          content:
+            text/plain:
+              schema:
+                type: string

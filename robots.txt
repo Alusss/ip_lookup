@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /health
+Disallow: /readyz
+Disallow: /ad-config
+
+Sitemap: https://ip.iohow.com/sitemap.xml

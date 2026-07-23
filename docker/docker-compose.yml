@@ -1,0 +1,56 @@
+# IP Lookup Docker Compose (optional, commented by default)
+# Uncomment and configure for Docker-based deployment
+# Requires: Docker and docker-compose plugin
+
+# version: "3.9"
+# services:
+#   ip-lookup:
+#     build:
+#       context: ..
+#       dockerfile: docker/Dockerfile
+#     container_name: ip-lookup
+#     restart: unless-stopped
+#     ports:
+#       - "127.0.0.1:8080:8080"
+#     volumes:
+#       - /etc/ip-lookup/config.yaml:/etc/ip-lookup/config.yaml:ro
+#       - /etc/ip-lookup/cf-cidrs.txt:/etc/ip-lookup/cf-cidrs.txt:ro
+#       - /var/log/ip-lookup:/var/log/ip-lookup
+#     environment:
+#       - LOG_LEVEL=info
+#       - AD_ENABLED=true
+#     cap_add:
+#       - NET_BIND_SERVICE
+#     security_opt:
+#       - no-new-privileges:true
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+#       interval: 30s
+#       timeout: 5s
+#       retries: 3
+#       start_period: 5s
+#     deploy:
+#       resources:
+#         limits:
+#           memory: 64M
+#           cpus: "0.5"
+#
+#   # Optional: Caddy reverse proxy sidecar
+#   # caddy:
+#   #   image: caddy:latest
+#   #   container_name: caddy
+#   #   restart: unless-stopped
+#   #   ports:
+#   #     - "80:80"
+#   #     - "443:443"
+#   #   volumes:
+#   #     - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+#   #     - /etc/caddy/cloudflare-trusted.conf:/etc/caddy/cloudflare-trusted.conf:ro
+#   #     - caddy_data:/data
+#   #   environment:
+#   #     - CF_API_TOKEN=${CF_API_TOKEN}
+#   #   depends_on:
+#   #     - ip-lookup
+#
+# # volumes:
+# #   caddy_data:

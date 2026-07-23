@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="ipv6_test_guide_title">IPv6 Test Guide: How to Check IPv6 Connectivity - IP Lookup</title>
+<meta name="description" content="Step-by-step guide on how to test IPv6 connectivity on your network. Learn how to verify IPv6 support on Windows, macOS, Linux, iOS, and Android.">
+<link rel="canonical" href="https://ip.iohow.com/docs/ipv6-test-guide">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--bg-card:#1e293b;--text:#f1f5f9;--text-secondary:#94a3b8;--accent:#3b82f6;--border:#334155;--radius:12px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,sans-serif}
+body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.container{max-width:720px;margin:0 auto;padding:48px 24px}
+h1{font-size:28px;margin-bottom:16px}
+h2{font-size:20px;margin-top:32px;margin-bottom:12px}
+h3{font-size:17px;margin-top:24px;margin-bottom:8px}
+p,li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
+ul,ol{padding-left:20px;margin-bottom:16px}
+code{background:var(--bg-card);padding:2px 6px;border-radius:4px;font-size:14px}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.cta{background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;text-align:center;margin-top:32px}
+.cta a{display:inline-block;margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border-radius:8px;font-weight:500}
+.cta a:hover{background:var(--accent-hover);text-decoration:none}
+.back{margin-top:40px}
+@media(prefers-color-scheme:light){:root{--bg:#f8fafc;--bg-card:#ffffff;--text:#0f172a;--text-secondary:#64748b;--border:#e2e8f0}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>How to Test IPv6 Connectivity</h1>
+
+  <p>This guide covers multiple ways to test whether your network supports IPv6 connectivity.</p>
+
+  <h2>Method 1: Online Test (Easiest)</h2>
+  <p>Visit <a href="/">ip.iohow.com</a>. The page automatically tests your IPv6 connectivity and displays your IPv6 address if available. No setup required.</p>
+
+  <h2>Method 2: Command Line</h2>
+
+  <h3>Windows</h3>
+  <p>Open Command Prompt (cmd) and run:</p>
+  <code>ping -6 2001:4860:4860::8888</code>
+  <p>Or check your assigned IPv6 address:</p>
+  <code>ipconfig | findstr "IPv6"</code>
+
+  <h3>macOS / Linux</h3>
+  <p>Open Terminal and run:</p>
+  <code>ping6 -c 4 2001:4860:4860::8888</code>
+  <p>Or check your interfaces:</p>
+  <code>ifconfig | grep inet6</code>
+
+  <h3>Linux (alternative)</h3>
+  <code>ip -6 addr show</code>
+  <p>Or test with curl:</p>
+  <code>curl -6 https://ip6.iohow.com/</code>
+
+  <h2>Method 3: Browser Test</h2>
+  <p>Visit <a href="https://ip6.iohow.com/">https://ip6.iohow.com/</a> directly in your browser. If you see an IP address, your browser can reach IPv6 servers. If the page fails to load, your network does not support IPv6.</p>
+
+  <h2>Troubleshooting</h2>
+  <ul>
+    <li><strong>IPv6 test fails but your ISP supports it</strong>: Check your router settings. IPv6 may be disabled in the router admin panel.</li>
+    <li><strong>Windows shows "No Internet access" for IPv6</strong>: Try running <code>netsh int ipv6 reset</code> as Administrator.</li>
+    <li><strong>macOS/Linux can't get IPv6</strong>: Check if your router's DHCPv6 or SLAAC is enabled.</li>
+    <li><strong>Mobile networks</strong>: Most 4G/5G carriers provide IPv6 automatically. If not, check your APN settings.</li>
+  </ul>
+
+  <div class="cta">
+    <p>Test your IPv6 connectivity instantly with our free tool.</p>
+    <a href="/">Test Now →</a>
+  </div>
+
+  <div class="back"><a href="/">&larr; Back to IP Lookup</a></div>
+</div>
+</body>
+</html>

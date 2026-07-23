@@ -1,0 +1,6 @@
+# Canonical redirects
+/en  /  302
+
+# API and backend paths should not be cached by Pages
+/health  https://ip4.iohow.com/health  302
+/readyz  https://ip4.iohow.com/readyz  302

@@ -1,0 +1,129 @@
+# IP Lookup Caddy Configuration
+# Requires: cloudflare DNS plugin for ACME DNS-01 challenge
+# Usage: CF_API_TOKEN=<token> caddy run --config Caddyfile
+# Security: CF_API_TOKEN is read from environment variable {env.CF_API_TOKEN},
+#           never stored in this file. Set via systemd EnvironmentFile or shell env.
+
+{
+	admin off
+}
+
+# Main site: ip.iohow.com (dual-stack)
+ip.iohow.com {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+
+	# Security headers
+	header / {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	}
+
+	# Proxy to Cloudflare Pages for static frontend
+	# This is handled by Cloudflare Pages directly via CDN.
+	# Caddy only terminates TLS for API subdomains on the origin.
+}
+
+# IPv4 API: ip4.iohow.com (A record only)
+ip4.iohow.com {
+	bind 0.0.0.0
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+
+	# Real IP restoration from Cloudflare
+	trusted_proxies static {
+		import /etc/caddy/cloudflare-trusted.conf
+	}
+	client_ip_headers CF-Connecting-IP X-Forwarded-For
+
+	# Security headers
+	header / {
+		X-Content-Type-Options "nosniff"
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	}
+
+	# Rate limiting
+	rate_limit {
+		zone dynamic {
+			key {http.request.remote.host}
+			events 10
+			window 1m
+		}
+	}
+
+	# Paths
+	handle /health {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	handle /readyz {
+		reverse_proxy 127.0.0.1:8080
+	}
+
+	handle / {
+		header Cache-Control "no-cache, must-revalidate"
+		reverse_proxy 127.0.0.1:8080 {
+			health_uri /health
+			health_interval 10s
+			max_conns 256
+		}
+	}
+
+	# Compression
+	encode gzip zstd
+}
+
+# IPv6 API: ip6.iohow.com (AAAA record only)
+ip6.iohow.com {
+	bind [::]
+
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+
+	# Real IP restoration from Cloudflare
+	trusted_proxies static {
+		import /etc/caddy/cloudflare-trusted.conf
+	}
+	client_ip_headers CF-Connecting-IP X-Forwarded-For
+
+	# Security headers
+	header / {
+		X-Content-Type-Options "nosniff"
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+	}
+
+	# Rate limiting
+	rate_limit {
+		zone dynamic {
+			key {http.request.remote.host}
+			events 10
+			window 1m
+		}
+	}
+
+	handle /health {
+		reverse_proxy [::1]:8081
+	}
+
+	handle /readyz {
+		reverse_proxy [::1]:8081
+	}
+
+	handle / {
+		header Cache-Control "no-cache, must-revalidate"
+		reverse_proxy [::1]:8081 {
+			health_uri /health
+			health_interval 10s
+			max_conns 256
+		}
+	}
+
+	encode gzip zstd
+}

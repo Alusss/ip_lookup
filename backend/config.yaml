@@ -1,0 +1,61 @@
+listen_addr_v4: 127.0.0.1
+listen_addr_v6: "::1"
+port_v4: 8080
+port_v6: 8081
+
+rate_per_ip: 10
+rate_per_ip_burst: 5
+rate_global: 5000
+rate_global_burst: 5000
+rate_cleanup_interval: 5m
+
+api_ad_enabled: true
+api_ad_text_zh: "推荐使用可靠的VPN服务保护您的隐私"
+api_ad_url_zh: "https://example.com/zh/vpn"
+api_ad_text_en: "Recommended VPN service for privacy"
+api_ad_url_en: "https://example.com/en/vpn"
+
+web_ad_enabled: true
+web_ad_text_zh: "推荐使用可靠的VPN服务保护您的隐私"
+web_ad_url_zh: "https://example.com/zh/vpn"
+web_ad_text_en: "Recommended VPN service for privacy"
+web_ad_url_en: "https://example.com/en/vpn"
+
+log_level: info
+log_file_max_size: 50
+log_file_max_age: 30
+log_file_backups: 7
+log_ip_masking: true
+
+cors_enabled: true
+json_api_enabled: true
+
+shutdown_timeout: 15s
+max_header_bytes: 1024
+read_timeout: 10s
+read_header_timeout: 5s
+write_timeout: 10s
+idle_timeout: 60s
+max_conns_per_ip: 8
+
+trusted_proxy_cidrs: "127.0.0.1/32,::1/128"
+ip_denylist: ""
+ua_denylist: ""
+
+cf_cidr_path: /etc/ip-lookup/cf-cidrs.txt
+cf_cidr_reload_interval: 30s
+
+geoip_enabled: false
+geoip_db_path: /var/lib/ip-lookup/GeoLite2-City.mmdb
+
+metrics_listen_addr: 127.0.0.1:9090
+
+monitoring:
+  enabled: false
+  check_interval: 60s
+  alert_cooldown: 10m
+  alert_webhook_url: ""
+  alert_webhook_type: "generic"
+  error_rate_threshold: 0.05
+  p99_latency_threshold_ms: 2000
+  rate_limit_hit_rate_threshold: 0.10

@@ -1,0 +1,47 @@
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+ip-lookup
+backend/ip-lookup
+backend/ip-lookup.exe
+
+# Test binary
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/var/log/ip-lookup/
+
+# Build output
+/tmp/
+/dist/
+
+# Backup files
+*.bak
+
+# Vendor (not used, but just in case)
+/vendor/

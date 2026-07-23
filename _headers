@@ -1,0 +1,17 @@
+# Static assets: long cache, immutable
+/frontend/*.js
+  Cache-Control: public, max-age=31536000, immutable
+/frontend/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML: no cache (always fresh)
+/index.html
+  Cache-Control: no-cache, must-revalidate
+
+# Security headers
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; connect-src 'self' https://ip4.iohow.com https://ip6.iohow.com; img-src 'self' data:; style-src 'unsafe-inline' 'self'; script-src 'self'; frame-ancestors 'none'

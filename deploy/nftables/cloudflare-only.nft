@@ -1,0 +1,44 @@
+#!/usr/sbin/nft -f
+# Cloudflare-only nftables ruleset
+# Last line of defense: only allow Cloudflare IPs to access ports 80/443
+# Apply with: nft -f /etc/nftables/cloudflare-only.nft
+# Auto-sync with: deploy/scripts/update-cloudflare-ip.sh (generates CIDR list at /etc/ip-lookup/cf-cidrs.txt)
+
+flush ruleset
+
+table inet filter {
+	# Allow established/related traffic
+	chain input {
+		type filter hook input priority 0; policy drop;
+
+		# Loopback
+		iif lo accept
+
+		# Established/related
+		ct state established,related accept
+
+		# ICMP (ping, etc.)
+		ip protocol icmp accept
+		ip6 protocol icmpv6 accept
+
+		# SSH (adjust as needed)
+		tcp dport 22 accept
+
+		# HTTP/HTTPS only from Cloudflare
+		# Load CF CIDRs from ipset or include file
+		include "/etc/nftables/cloudflare-cidr.nft"
+
+		# Log dropped packets (rate-limited)
+		log prefix "nftables-drop: " limit rate 5/minute burst 10
+	}
+
+	chain forward {
+		type filter hook forward priority 0; policy drop;
+	}
+}
+
+# Note: Cloudflare CIDRs should be added by update-cloudflare-ip.sh to:
+# /etc/nftables/cloudflare-cidr.nft
+# Format example:
+#   ip saddr 173.245.48.0/20 tcp dport { 80, 443 } accept
+#   ip6 saddr 2400:cb00::/32 tcp dport { 80, 443 } accept
