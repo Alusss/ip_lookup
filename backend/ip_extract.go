@@ -22,13 +22,30 @@ type IPExtractor struct {
 	proxyCIDRsMu sync.RWMutex
 }
 
-func NewIPExtractor(cfCidrPath string) *IPExtractor {
+func NewIPExtractor(cfCidrPath string, reloadInterval time.Duration) *IPExtractor {
 	e := &IPExtractor{
 		cfCIDRPath: cfCidrPath,
 	}
 	e.loadCfCIDRs()
 	e.startCfCidrWatcher()
+	e.startCfCidrFallbackTimer(reloadInterval)
 	return e
+}
+
+// startCfCidrFallbackTimer periodically re-reads the CF CIDR file as a safety
+// net in case an fsnotify event is missed (e.g. certain filesystems, atomic
+// replaces across mounts). The primary reload mechanism remains fsnotify.
+func (e *IPExtractor) startCfCidrFallbackTimer(interval time.Duration) {
+	if interval <= 0 {
+		return
+	}
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for range ticker.C {
+			e.loadCfCIDRs()
+		}
+	}()
 }
 
 func (e *IPExtractor) loadCfCIDRs() {
@@ -129,6 +146,21 @@ func (e *IPExtractor) isProxyIP(ip net.IP) bool {
 		}
 	}
 	return false
+}
+
+// IsSourceTrusted reports whether the direct TCP peer of r is a Cloudflare edge
+// IP or a configured trusted proxy. Used by the cf_only guard to reject direct
+// connections that bypass the CDN / reverse proxy.
+func (e *IPExtractor) IsSourceTrusted(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	ip := net.ParseIP(host)
+	if ip == nil {
+		return false
+	}
+	return e.isCfIP(ip) || e.isProxyIP(ip)
 }
 
 func (e *IPExtractor) RealIP(r *http.Request) (net.IP, error) {

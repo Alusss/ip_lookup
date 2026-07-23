@@ -90,7 +90,8 @@
 **用户流程（开发者）**：
 ```
 curl ip4.iohow.com/   → "203.0.113.42" (纯文本)
-curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"IPv4","city":"...","country":"...","isp":"..."}
+curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}
+curl ip4.iohow.com/all   → 同上 JSON（需 all_api_enabled=true；关闭时等同 /）
 ```
 
 ### 2. 功能需求
@@ -121,23 +122,23 @@ curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"I
 
 | 项 | 说明 |
 |------|--------|
-| **功能** | 前端动态拉取 `/ad-config` 展示顶栏广告；直接 API 访问也可配置广告文案 |
+| **功能** | Web 广告通过 `/` 响应头 `X-Ad-*` 下发；另有 `/ad-config` 独立端点可选；直接 API 访问也可配置广告文案 |
 | **用途** | 非侵入式变现，兼顾 Web 和 API 两种场景 |
-| **业务流程** | 后端 YAML/ENV 配置广告文案 → fsnotify 热加载 → 前端 fetch `/ad-config` → 渲染/隐藏 |
-| **输入** | 前端 GET `/ad-config`，携带 `Accept-Language` |
+| **业务流程** | 后端 YAML/ENV 配置广告文案 → fsnotify 热加载 → `/` 响应注入 `X-Ad-*` 头 → 前端读取渲染/隐藏 |
+| **输入** | 前端 `GET /`（携带 `X-Client: web`）或 `GET /ad-config`，携带 `Accept-Language` |
 | **处理** | `Config.GetWebAdConfig` 按语言返回对应文案 |
-| **输出** | JSON `{"web":{"enabled":true,"text":"...","url":"..."}}` |
+| **输出** | `/` 响应头 `X-Ad-Enabled/Text/URL`；`/ad-config` 返回 JSON `{"web":{"enabled":true,"text":"...","url":"..."}}` |
 
 #### 模块 D：GeoIP 地理位置查询
 
 | 项 | 说明 |
 |------|--------|
-| **功能** | 可选模块，根据 IP 查询城市/国家/ISP |
+| **功能** | 可选模块，根据 IP 查询城市/国家/ISP/ASN |
 | **用途** | 为 JSON API 用户提供 IP 归属地信息 |
-| **业务流程** | JSON API 请求 → `geoip.go:Lookup` → mmdb 查找 → LRU 缓存 → 响应 |
-| **输入** | JSON API 请求（`Accept: application/json`） |
-| **处理** | GeoLite2 数据库 IP 解析 → 城市/国家/ISP 信息提取 |
-| **输出** | 附加在 JSON 响应中的 `city`/`country`/`isp` 字段 |
+| **业务流程** | JSON API 请求 -> `geoip.go:Lookup(ip, lang)` -> City/ASN 库查找 -> LRU 缓存 -> 响应 |
+| **输入** | JSON API 请求（`Accept: application/json`）或 `/all` 路由 |
+| **处理** | GeoLite2 City + ASN 库解析 -> 按 `Accept-Language` 选 `zh-CN`/`en` 地名（回退 en）-> ASN 编号+组织名 |
+| **输出** | 附加在 JSON 响应中的 `city`/`country`/`isp`/`asn` 字段 |
 
 #### 模块 E：可观测性
 
@@ -153,12 +154,12 @@ curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"I
 
 | 项 | 说明 |
 |------|--------|
-| **功能** | 自动拉取 Cloudflare 出口 IP 段，更新 Go/Caddy/Nginx 三份配置 |
-| **用途** | 维持真实 IP 信任链的准确性，因 CF IP 段会变化 |
-| **业务流程** | cron/systemd timer → 拉取官方列表 → 校验 → 原子替换 → reload/热加载 |
+| **功能** | 自动拉取 Cloudflare 出口 IP 段，更新 Go/Caddy/Nginx/nftables 配置 |
+| **用途** | 维持真实 IP 信任链与源站防火墙的准确性，因 CF IP 段会变化 |
+| **业务流程** | cron/systemd timer -> 拉取官方列表 -> 校验 -> 原子替换 -> reload/热加载 |
 | **输入** | Cloudflare 官方 IP 列表 |
-| **处理** | shell 脚本解析 → 同时生成三份配置 → 校验长度/格式 → 原子 mv |
-| **输出** | 更新后的 `cf-cidrs.txt`、`cloudflare-realip.conf`、`cloudflare-trusted.conf` |
+| **处理** | shell 脚本解析 -> 同时生成四份配置 -> 校验长度/格式 -> 原子 mv |
+| **输出** | 更新后的 `cf-cidrs.txt`、`cloudflare-realip.conf`、`cloudflare-trusted.conf`、`cloudflare-cidr.nft`（nftables 仅在已安装时生成） |
 
 ### 3. 非功能需求
 
@@ -265,7 +266,6 @@ curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"I
 | **GeoIP** | `geoip.go` | IP 地理查询、LRU 缓存、DB 热加载 | `geoip2-golang` |
 | **错误集中管理** | `errors.go` | 错误消息常量 + 状态码映射 | 无 |
 | **监控** | `monitor.go` | 内置自监控引擎、阈值检查、Webhook 推送 | Config、Metrics |
-| **熔断器** | `circuitbreaker.go` | 通用熔断器（预留，当前未被 Handler 引用） | 无 |
 | **缓存** | `cache.go` | 泛型 LRU 缓存 | 无 |
 | **入口** | `main.go` | 初始化所有组件、启动双栈 HTTP Server、优雅退出 | 所有模块 |
 
@@ -300,13 +300,15 @@ Go Backend :8080
     │   ├─ /health → 200 OK
     │   ├─ /readyz → 200 OK (ready atomic 控制)
     │   ├─ /ad-config → JSON 广告配置
+    │   ├─ /all → allHandler（开关 off 时等同 /）
     │   └─ / → rootHandler
     │
-    ├─ rootHandler 逻辑
+    ├─ rootHandler / allHandler 逻辑
     │   ├─ ready.Load()? → 否：503
-    │   ├─ globalLimiter.Allow()? → 否：429
-    │   ├─ perIPLimiter.Allow()? → 否：429
-    │   ├─ Accept: application/json? → JSON 响应 (含 GeoIP)
+    │   ├─ cf_only 且来源非 CF/受信代理? → 否：403
+    │   ├─ rate_enabled? → 按 rate_mode 校验 global/per_ip 限流 → 否：429
+    │   ├─ /all 开启? → JSON 响应 (含 GeoIP+ASN)
+    │   ├─ Accept: application/json? → JSON 响应 (含 GeoIP+ASN)
     │   ├─ X-Client: web? → 纯 IP + 响应头广告
     │   └─ 直接访问 → 广告文案 + IP
     │
@@ -380,6 +382,7 @@ func (e *IPExtractor) RealIP(r *http.Request) (net.IP, error)
 
 - fsnotify 监听 `/etc/ip-lookup/cf-cidrs.txt` 文件变更
 - 变更后 200ms debounce → 原子替换 `cfCIDRs` 切片
+- 兜底定时器（`cf_cidr_reload_interval`，默认 5m）周期重载，防 fsnotify 事件丢失
 - 不停止现有连接
 
 ### 模块：限流 (ratelimit.go)
@@ -407,6 +410,7 @@ type PerIPRateLimiter struct {
 - `sync.Map.LoadOrStore` 原子语义避免竞态
 - 清理 goroutine 每 5 分钟遍历所有 limiters，删除 token 满的（即该 IP 已空闲）
 - 超出返回 `429 Too Many Requests` + `Retry-After` 头
+- `rate_enabled` 总开关（可临时关闭便于调试）；`rate_mode` 选择 `both`/`per_ip`/`global`；均支持热加载
 
 ### 模块：处理器 (handler.go)
 
@@ -414,7 +418,8 @@ type PerIPRateLimiter struct {
 
 | 请求特征 | 返回格式 | 内容 |
 |----------|----------|------|
-| `Accept: application/json` + `JsonApiEnabled=true` | JSON | `{"ip":"...","version":"IPv4","city":"...","country":"...","isp":"..."}` |
+| `Accept: application/json` + `JsonApiEnabled=true` | JSON | `{"ip":"...","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}` |
+| `GET /all` + `AllApiEnabled=true` | JSON | 同上（始终 JSON，含 GeoIP+ASN） |
 | `X-Client: web` | text/plain | 纯 IP（响应头带 X-Ad-* 广告信息） |
 | `ApiAdEnabled=true` 且无 web 头 | text/plain | 两行：`广告文案 (URL)\n纯IP` |
 | `ApiAdEnabled=false` 且无 web 头 | text/plain | 纯 IP |
@@ -596,16 +601,15 @@ Idle → Loading → Success ──→ Idle（1.5s 后淡出）
 backend/
 ├── main.go              # 入口：初始化、双栈监听、优雅退出、slog 配置
 ├── config.go            # 配置加载/热加载、环境变量覆盖、语言检测、广告配置读取
-├── handler.go           # HTTP Handler：/health, /readyz, /metrics, /ad-config, /
+├── handler.go           # HTTP Handler：/health, /readyz, /metrics, /ad-config, /all, /
 ├── middleware.go        # 11 层中间件链、IP 提取从 Context、日志、安全头、限流
-├── ip_extract.go        # 真实 IP 提取、CF CIDR 热加载、可信代理支持
-├── ratelimit.go         # 单 IP + 全局 Token Bucket 限流
+├── ip_extract.go        # 真实 IP 提取、CF CIDR 热加载+兜底定时、cf_only 校验、可信代理支持
+├── ratelimit.go         # 单 IP + 全局 Token Bucket 限流（可开关/选模式）
 ├── ad.go                # Web 客户端判断
-├── geoip.go             # GeoLite2 查询、LRU 缓存、DB 热加载
+├── geoip.go             # GeoLite2 City+ASN 查询、LRU 缓存、DB 热加载+配置热重载、中英文地名
 ├── metrics.go           # Prometheus 格式指标
 ├── errors.go            # 错误消息集中管理
 ├── monitor.go           # 内置自监控告警引擎
-├── circuitbreaker.go    # 通用熔断器（预留）
 ├── cache.go             # 泛型 LRU 缓存
 ├── main_test.go         # 测试（单元 + 集成）
 ├── config.yaml          # 默认配置文件
@@ -619,16 +623,16 @@ backend/
 main:main()
   │
   ├── LoadConfig(configPath) → 解析 YAML + 环境变量覆盖
-  ├── NewIPExtractor(cfCidrPath) → 加载 CF CIDR + 启动 fsnotify watcher
+  ├── NewIPExtractor(cfCidrPath, reloadInterval) → 加载 CF CIDR + fsnotify watcher + 兜底定时器
   ├── NewPerIPRateLimiter(...) → 单 IP 限流器 + cleanup goroutine
   ├── NewGlobalRateLimiter(...) → 全局限流器
   ├── NewMetrics() → 指标收集器
-  ├── NewGeoIP(dbPath, enabled) → GeoIP 查询器 + fsnotify watcher
+  ├── NewGeoIP(dbPath, asnDbPath, enabled) → GeoIP 查询器 + fsnotify watcher
   ├── NewMonitor(cfg, metrics) → 自监控引擎
   ├── http.NewServeMux → 注册路由
   ├── 11 层中间件链包装 handler
   ├── 3 x http.Server (v4, v6, metrics) → 并发 ListenAndServe
-  ├── config.StartHotReload() → fsnotify 后台监听
+  ├── config.StartHotReload() → fsnotify 后台监听（回调重配反代 CIDR + GeoIP Configure）
   ├── ready.Store(true) → 对外就绪
   ├── 等待 signal / error
   ├── ready.Store(false) → 停止接收新请求
@@ -675,7 +679,7 @@ RemoteAddr → 来源 IP ∈ CF CIDR？
   ├─ 是 → 取 CF-Connecting-IP → 校验 → 用于限流/日志
   └─ 否 → 来源 IP ∈ TRUSTED_PROXY_CIDRS？
        ├─ 是 → 取 X-Forwarded-For 最右跳 → 校验
-       └─ 否 → 取 RemoteAddr（直连）
+       └─ 否 → cf_only 开启则 403；否则取 RemoteAddr（直连）
 ```
 
 ### 限流策略
@@ -762,7 +766,6 @@ RemoteAddr → 来源 IP ∈ CF CIDR？
 | `TestParseXFF` | 参数化 | X-Forwarded-For 解析 |
 | `TestFullMiddlewareChain` | 集成 | 全链测试 |
 | `TestLoggingMiddlewareCapturesRejectedStatus` | 集成 | 黑名单过滤+指标 |
-| `TestCircuitBreaker` | 集成 | 熔断器状态机转换 |
 | `TestFindBucket` | 参数化 | 延迟桶索引 |
 | `TestMonitorThresholds` | 单元 | P99 计算、阈值评估 |
 
@@ -1103,7 +1106,6 @@ curl localhost:8080/         # → IP
 |------|------|----------|
 | **无 CI/CD 自动化** | 仅有 PR verify，无 auto-build + release | 部署手动，版本不可追溯 |
 | **密钥明文存储** | CF_API_TOKEN、MAXMIND_LICENSE_KEY 明文 | 中等风险 |
-| **熔断器未接入** | `circuitbreaker.go` 已实现但未被 handler 引用 | 低（当前无外部依赖） |
 | **单实例架构** | 水平扩展需手动改 DNS | 当前流量无瓶颈 |
 | **无 staging 环境** | 变更直接上生产 | 中等风险 |
 
@@ -1120,7 +1122,7 @@ curl localhost:8080/         # → IP
 | 版本 | 计划内容 |
 |------|----------|
 | **V1.0（当前）** | 核心 IP 查询、双栈、GeoIP、广告配置、自监控、完整文档 |
-| **V1.1（短期）** | CI release pipeline（GitHub Actions tag → build → Docker push + GH Release）、密钥管理（sops）、熔断器接入实际路由 |
+| **V1.1（短期）** | CI release pipeline（GitHub Actions tag → build → Docker push + GH Release）、密钥管理（sops） |
 | **V1.2（中期）** | 子网计算工具页、批量 IP 查询 API、PWA manifest + Service Worker |
 | **V2.0（长期）** | 多 region 部署（可选 K8s）、API Key 认证、企业级付费计划、日/韩/法/德语国际化 |
 

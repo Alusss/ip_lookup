@@ -31,11 +31,13 @@ type ConfigValues struct {
 	PortV4       int    `yaml:"port_v4"`
 	PortV6       int    `yaml:"port_v6"`
 
-	RatePerIP         int           `yaml:"rate_per_ip"`
-	RatePerIPBurst    int           `yaml:"rate_per_ip_burst"`
-	RateGlobal        int           `yaml:"rate_global"`
-	RateGlobalBurst   int           `yaml:"rate_global_burst"`
-	RateCleanupInterval time.Duration `yaml:"rate_cleanup_interval"`
+	RateEnabled            bool          `yaml:"rate_enabled"`
+	RatePerIP              int           `yaml:"rate_per_ip"`
+	RatePerIPBurst         int           `yaml:"rate_per_ip_burst"`
+	RateGlobal             int           `yaml:"rate_global"`
+	RateGlobalBurst        int           `yaml:"rate_global_burst"`
+	RateMode               string        `yaml:"rate_mode"`
+	RateCleanupInterval    time.Duration `yaml:"rate_cleanup_interval"`
 
 	ApiAdEnabled bool   `yaml:"api_ad_enabled"`
 	ApiAdTextZh  string `yaml:"api_ad_text_zh"`
@@ -55,8 +57,9 @@ type ConfigValues struct {
 	LogFileBackups   int    `yaml:"log_file_backups"`
 	LogIpMasking     bool   `yaml:"log_ip_masking"`
 
-	CorsEnabled  bool `yaml:"cors_enabled"`
+	CorsEnabled    bool `yaml:"cors_enabled"`
 	JsonApiEnabled bool `yaml:"json_api_enabled"`
+	AllApiEnabled  bool `yaml:"all_api_enabled"`
 
 	ShutdownTimeout    time.Duration `yaml:"shutdown_timeout"`
 	MaxHeaderBytes     int           `yaml:"max_header_bytes"`
@@ -72,9 +75,11 @@ type ConfigValues struct {
 
 	CfCidrPath            string        `yaml:"cf_cidr_path"`
 	CfCidrReloadInterval  time.Duration `yaml:"cf_cidr_reload_interval"`
+	CfOnly                bool          `yaml:"cf_only"`
 
-	GeoipEnabled bool   `yaml:"geoip_enabled"`
-	GeoipDbPath  string `yaml:"geoip_db_path"`
+	GeoipEnabled   bool   `yaml:"geoip_enabled"`
+	GeoipDbPath    string `yaml:"geoip_db_path"`
+	GeoipAsnDbPath string `yaml:"geoip_asn_db_path"`
 
 	MetricsListenAddr string `yaml:"metrics_listen_addr"`
 
@@ -98,11 +103,13 @@ func DefaultConfig() *Config {
 			PortV4:       8080,
 			PortV6:       8081,
 
-			RatePerIP:         10,
-			RatePerIPBurst:    5,
-			RateGlobal:        5000,
-			RateGlobalBurst:   5000,
-			RateCleanupInterval: 5 * time.Minute,
+			RateEnabled:            true,
+			RatePerIP:              10,
+			RatePerIPBurst:         5,
+			RateGlobal:             5000,
+			RateGlobalBurst:        5000,
+			RateMode:               "both",
+			RateCleanupInterval:    5 * time.Minute,
 
 			ApiAdEnabled: true,
 			ApiAdTextZh:  "推荐使用可靠的VPN服务保护您的隐私",
@@ -122,8 +129,9 @@ func DefaultConfig() *Config {
 			LogFileBackups: 7,
 			LogIpMasking:   true,
 
-			CorsEnabled:     true,
-			JsonApiEnabled:  true,
+		CorsEnabled:     true,
+		JsonApiEnabled:  true,
+		AllApiEnabled:   false,
 
 			ShutdownTimeout:   15 * time.Second,
 			MaxHeaderBytes:    1024,
@@ -133,11 +141,13 @@ func DefaultConfig() *Config {
 			IdleTimeout:       60 * time.Second,
 			MaxConnsPerIP:     8,
 
-			CfCidrPath:           "/etc/ip-lookup/cf-cidrs.txt",
-			CfCidrReloadInterval: 30 * time.Second,
+		CfCidrPath:           "/etc/ip-lookup/cf-cidrs.txt",
+		CfCidrReloadInterval: 5 * time.Minute,
+		CfOnly:               false,
 
-			GeoipEnabled: false,
-			GeoipDbPath:  "/var/lib/ip-lookup/GeoLite2-City.mmdb",
+		GeoipEnabled:   false,
+		GeoipDbPath:    "/var/lib/ip-lookup/GeoLite2-City.mmdb",
+		GeoipAsnDbPath: "/var/lib/ip-lookup/GeoLite2-ASN.mmdb",
 
 			MetricsListenAddr: "127.0.0.1:9090",
 
@@ -185,6 +195,11 @@ func (cfg *Config) validate() error {
 			return fmt.Errorf("invalid ad URL (must be http or https): %q", u)
 		}
 	}
+	switch cfg.RateMode {
+	case "both", "per_ip", "global":
+	default:
+		return fmt.Errorf("invalid rate_mode %q (must be both|per_ip|global)", cfg.RateMode)
+	}
 	return nil
 }
 
@@ -224,6 +239,12 @@ func overrideFromEnv(cfg *Config) {
 		if p, err := strconv.Atoi(v); err == nil {
 			cfg.RateGlobalBurst = p
 		}
+	}
+	if v := os.Getenv("RATE_ENABLED"); v != "" {
+		cfg.RateEnabled = v == "true" || v == "1"
+	}
+	if v := os.Getenv("RATE_MODE"); v != "" {
+		cfg.RateMode = v
 	}
 
 	if v := os.Getenv("API_AD_ENABLED"); v != "" {
@@ -285,6 +306,9 @@ func overrideFromEnv(cfg *Config) {
 	if v := os.Getenv("JSON_API_ENABLED"); v != "" {
 		cfg.JsonApiEnabled = v == "true" || v == "1"
 	}
+	if v := os.Getenv("ALL_API_ENABLED"); v != "" {
+		cfg.AllApiEnabled = v == "true" || v == "1"
+	}
 	if v := os.Getenv("TRUSTED_PROXY_CIDRS"); v != "" {
 		cfg.TrustedProxyCIDRs = v
 	}
@@ -297,11 +321,22 @@ func overrideFromEnv(cfg *Config) {
 	if v := os.Getenv("CF_CIDR_PATH"); v != "" {
 		cfg.CfCidrPath = v
 	}
+	if v := os.Getenv("CF_CIDR_RELOAD_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			cfg.CfCidrReloadInterval = d
+		}
+	}
+	if v := os.Getenv("CF_ONLY"); v != "" {
+		cfg.CfOnly = v == "true" || v == "1"
+	}
 	if v := os.Getenv("GEOIP_ENABLED"); v != "" {
 		cfg.GeoipEnabled = v == "true" || v == "1"
 	}
 	if v := os.Getenv("GEOIP_DB_PATH"); v != "" {
 		cfg.GeoipDbPath = v
+	}
+	if v := os.Getenv("GEOIP_ASN_DB_PATH"); v != "" {
+		cfg.GeoipAsnDbPath = v
 	}
 	if v := os.Getenv("METRICS_LISTEN_ADDR"); v != "" {
 		cfg.MetricsListenAddr = v
@@ -410,10 +445,22 @@ func (cfg *Config) detectLanguage(r *http.Request) string {
 	}
 	primary := strings.TrimSpace(langs[0])
 	primary = strings.Split(primary, ";")[0]
-	if strings.HasPrefix(primary, "zh") {
+	if isSimplifiedZh(primary) {
 		return "zh"
 	}
 	return "en"
+}
+
+// isSimplifiedZh reports whether the given language tag denotes Simplified
+// Chinese. Only zh-CN / zh-Hans / zh-SG (and bare zh) are treated as zh;
+// Traditional variants (zh-TW, zh-HK, zh-Hant, ...) fall back to en, matching
+// the site-wide i18n policy.
+func isSimplifiedZh(lang string) bool {
+	switch strings.ToLower(strings.TrimSpace(lang)) {
+	case "zh", "zh-cn", "zh-hans", "zh-sg":
+		return true
+	}
+	return false
 }
 
 type adConfig struct {
@@ -463,6 +510,36 @@ func (cfg *Config) GetDenylistUAs() []string {
 	cfg.mu.RLock()
 	defer cfg.mu.RUnlock()
 	return parseCommaList(cfg.UADenylist)
+}
+
+func (cfg *Config) GetRateEnabled() bool {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.RateEnabled
+}
+
+func (cfg *Config) GetRateMode() string {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.RateMode
+}
+
+func (cfg *Config) GetCfOnly() bool {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.CfOnly
+}
+
+func (cfg *Config) GetAllApiEnabled() bool {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.AllApiEnabled
+}
+
+func (cfg *Config) GetGeoipConfig() (bool, string, string) {
+	cfg.mu.RLock()
+	defer cfg.mu.RUnlock()
+	return cfg.GeoipEnabled, cfg.GeoipDbPath, cfg.GeoipAsnDbPath
 }
 
 func validateAdURL(u string) bool {

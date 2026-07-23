@@ -16,10 +16,12 @@
 | `{{LISTEN_ADDR_V6}}` | `::1` | IPv6 监听地址 |
 | `{{PORT_V4}}` | `8080` | IPv4 监听端口 |
 | `{{PORT_V6}}` | `8081` | IPv6 监听端口 |
+| `{{RATE_ENABLED}}` | `true` | 限速总开关（调试时可关闭） |
+| `{{RATE_MODE}}` | `both` | 限速策略：both/per_ip/global |
 | `{{RATE_PER_IP}}` | `10` | 单 IP 限流（req/min） |
 | `{{RATE_PER_IP_BURST}}` | `5` | 单 IP burst |
-| `{{RATE_GLOBAL_BURST}}` | `1000` | 全局限流 burst |
-| `{{RATE_GLOBAL_RATELIMIT}}` | `1000` | 全局限流 rate |
+| `{{RATE_GLOBAL}}` | `5000` | 全局限流 rate (req/s) |
+| `{{RATE_GLOBAL_BURST}}` | `5000` | 全局限流 burst |
 | `{{SHUTDOWN_TIMEOUT}}` | `15` | 优雅退出超时（秒） |
 | `{{API_AD_ENABLED}}` | `true` | API 广告开关（直接访问 API 时展示） |
 | `{{API_AD_TEXT_ZH}}` | — | 中文 API 广告文案 |
@@ -37,6 +39,7 @@
 | `{{LOG_FILE_BACKUPS}}` | `7` | 日志文件备份数量 |
 | `{{CORS_ENABLED}}` | `true` | CORS 开关 |
 | `{{JSON_API_ENABLED}}` | `true` | JSON API 开关（Accept: application/json） |
+| `{{ALL_API_ENABLED}}` | `false` | /all 路由开关：开则返回 IP+地点+ASN 的 JSON；关则等同 / |
 | `{{LOG_IP_MASKING}}` | `true` | 日志 IP 脱敏开关 |
 
 ---
@@ -51,9 +54,19 @@
 | `{{WRITE_TIMEOUT}}` | `10` | 写入超时（秒） |
 | `{{IDLE_TIMEOUT}}` | `60` | Idle 连接超时（秒） |
 | `{{MAX_CONNS_PER_IP}}` | `8` | 单 IP 最大并发连接数 |
-| `{{TRUSTED_PROXY_CIDRS}}` | ``（空） | 可信代理 CIDR 列表，逗号分隔 |
+| `{{TRUSTED_PROXY_CIDRS}}` | `127.0.0.1/32,::1/128` | 可信代理 CIDR 列表，逗号分隔 |
 | `{{IP_DENYLIST}}` | ``（空） | IP 黑名单，逗号分隔，匹配则返回 403 |
 | `{{UA_DENYLIST}}` | ``（空） | User-Agent 黑名单，逗号分隔子串匹配 |
+
+---
+
+## Cloudflare 访问控制
+
+| 变量名 | 默认值 | 说明 |
+|--------|--------|------|
+| `{{CF_CIDR_PATH}}` | `/etc/ip-lookup/cf-cidrs.txt` | CF CIDR 列表文件（由同步脚本生成） |
+| `{{CF_CIDR_RELOAD_INTERVAL}}` | `5m` | 兜底定时重载周期（主机制为 fsnotify 文件监听） |
+| `{{CF_ONLY}}` | `false` | 仅接受 CF/受信代理来源的请求（开启后直连后端返回 403） |
 
 ---
 
@@ -81,7 +94,8 @@
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | `{{GEOIP_ENABLED}}` | `false` | GeoIP 地理位置查询开关 |
-| `{{GEOIP_DB_PATH}}` | `/var/lib/ip-lookup/GeoLite2-City.mmdb` | GeoLite2 数据库路径 |
+| `{{GEOIP_DB_PATH}}` | `/var/lib/ip-lookup/GeoLite2-City.mmdb` | GeoLite2 City 数据库路径 |
+| `{{GEOIP_ASN_DB_PATH}}` | `/var/lib/ip-lookup/GeoLite2-ASN.mmdb` | GeoLite2 ASN 数据库路径（可选，提供 AS 编号+组织名） |
 | `{{MAXMIND_LICENSE_KEY}}` | — | MaxMind 许可证密钥（自动更新用） |
 
 ---
@@ -108,3 +122,4 @@
 - 2026-07-22: 初始版本（v0.1）
 - 2026-07-22: 拆分 API 广告与 Web 广告配置，增加 GeoIP/JSON API 配置
 - 2026-07-23: 增加自监控告警配置（MONITORING_ENABLED / MONITORING_WEBHOOK_URL / MONITORING_WEBHOOK_TYPE）
+- 2026-07-23: 增加限速开关/策略（RATE_ENABLED / RATE_MODE）、/all 路由（ALL_API_ENABLED）、CF 访问控制（CF_CIDR_PATH / CF_CIDR_RELOAD_INTERVAL / CF_ONLY）、GeoIP ASN（GEOIP_ASN_DB_PATH）；修正全局限流默认值 1000->5000

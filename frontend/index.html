@@ -8,6 +8,7 @@
 <meta name="keywords" content="IP查询,IPv6检测,我的IP,What is my IP,IP address lookup">
 <link rel="canonical" href="https://ip.iohow.com/">
 <link rel="alternate" hreflang="zh-CN" href="https://ip.iohow.com/">
+<link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
 <link rel="alternate" hreflang="en" href="https://ip.iohow.com/en/">
 <meta property="og:title" content="" data-i18n-attrs="content:og_title">
 <meta property="og:description" content="" data-i18n-attrs="content:og_desc">
@@ -29,8 +30,8 @@
 </script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
-.container{width:100%;max-width:640px;margin:0 auto;padding:32px 20px 24px;min-height:100vh}
-.ad-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;font-size:14px;gap:12px}
+.container{width:100%;max-width:640px;margin:0 auto;padding:20px 20px 24px;min-height:100vh}
+.ad-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 20px;margin:0 auto 20px;max-width:640px;display:flex;align-items:center;justify-content:space-between;font-size:14px;gap:12px}
 .ad-bar a{color:var(--accent)}
 .ad-bar a:hover{text-decoration:underline}
 .ad-bar .close-ad{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;flex-shrink:0}
@@ -57,16 +58,20 @@ main{display:flex;flex-direction:column}
 .geo-line:empty{min-height:0;margin-top:0}
 .actions{display:flex;gap:12px;justify-content:center;margin-top:20px}
 .btn.loading .btn-text{opacity:.7}
-footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secondary);font-size:13px}
-.knowledge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:0 0 20px;margin-bottom:4px;border-bottom:1px solid var(--border)}
-.knowledge-row a{font-size:13px;color:var(--text-secondary);padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:color .2s,border-color .2s,background .2s}
+footer{margin-top:24px;padding:0 0 16px;text-align:center;color:var(--text-secondary);font-size:13px}
+.knowledge-row{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;justify-content:center;padding:0 0 10px;margin-bottom:8px;border-bottom:1px solid var(--border);overflow:hidden}
+.knowledge-row a{font-size:13px;color:var(--text-secondary);padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:color .2s,border-color .2s,background .2s;flex-shrink:0;white-space:nowrap}
 .knowledge-row a:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
 .knowledge-row a.kb-more{color:var(--accent);border-color:rgba(99,102,241,.5);font-weight:500}
-.footer-main{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:16px}
+.knowledge-row a.kb-hide{display:none}
+.footer-email{margin-top:14px}
+.footer-email a{color:var(--text-secondary)}
+.footer-email a:hover{color:var(--text)}
+.footer-main{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:6px}
 .footer-main .sep{opacity:.4}
 .footer-main a{color:var(--text-secondary)}
 .footer-main a:hover{color:var(--text)}
-.footer-filing{font-size:11px;opacity:.7;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.footer-filing{font-size:11px;opacity:.7;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .footer-filing.hidden{display:none}
 .footer-filing img{width:14px;height:14px;vertical-align:middle}
 @media(max-width:480px){.container{padding:20px 14px 16px}.logo{gap:10px}.logo svg{width:48px;height:48px}.logo h1{font-size:36px}.ip-display .ip-address{font-size:26px}header p{font-size:15px}}
@@ -74,11 +79,11 @@ footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secon
 <script src="js/i18n.js"></script>
 </head>
 <body>
+<div id="ad-bar" class="ad-bar hidden" role="complementary" aria-label="Advertisement">
+  <a id="ad-link" href="" target="_blank" rel="noopener sponsored"></a>
+  <button class="close-ad" id="close-ad" aria-label="Close advertisement">&times;</button>
+</div>
 <div class="container">
-  <div id="ad-bar" class="ad-bar hidden" role="complementary" aria-label="Advertisement">
-    <a id="ad-link" href="" target="_blank" rel="noopener sponsored"></a>
-    <button class="close-ad" id="close-ad" aria-label="Close advertisement">&times;</button>
-  </div>
   <header>
     <div class="logo">
       <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -98,8 +103,8 @@ footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secon
   <main>
     <div id="ipv4-card" class="card ip-display">
       <div class="label"><span data-i18n="ipv4_label">IPv4 Address</span></div>
-      <div id="ip-address" class="ip-address loading" data-i18n="loading" aria-live="polite">
-        Getting your IP address...
+      <div id="ip-address" class="ip-address loading" data-i18n="loading_short" aria-live="polite">
+        Loading...
       </div>
       <div id="geo-line" class="geo-line" aria-live="polite"></div>
       <div id="status-msg" class="status-msg idle" role="status"></div>
@@ -117,7 +122,8 @@ footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secon
     </div>
     <div id="ipv6-card" class="card ip-display">
       <div class="label"><span data-i18n="ipv6_label">IPv6 Address</span></div>
-      <div id="ipv6-address" class="ip-address loading" aria-live="polite" data-i18n="ipv6_testing">Testing...</div>
+      <div id="ipv6-address" class="ip-address loading" aria-live="polite" data-i18n="loading_short">Loading...</div>
+      <div id="ipv6-geo-line" class="geo-line" aria-live="polite"></div>
       <div id="ipv6-status" class="status-msg idle" role="status"></div>
       <div class="actions">
         <button class="btn btn-primary" id="ipv6-copy-btn" aria-label="Copy IPv6 address" disabled>
@@ -140,12 +146,13 @@ footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secon
       <a href="/docs/public-vs-private-ip" data-i18n="kb_pub_priv">Public vs Private IP</a>
       <a class="kb-more" href="/docs/" data-i18n="kb_more">Learn more &rarr;</a>
     </nav>
+    <div class="footer-email">
+      <span data-i18n="email_label">Email</span>: <a href="mailto:contact@iohow.com">contact@iohow.com</a>
+    </div>
     <div class="footer-main">
-      <a href="/privacy" data-i18n="privacy">Privacy Policy</a>
-      <span class="sep">&middot;</span>
-      <span><span data-i18n="email_label">Email</span>: <a href="mailto:contact@iohow.com">contact@iohow.com</a></span>
-      <span class="sep">&middot;</span>
       <span id="copyright-text"></span>
+      <span class="sep">&middot;</span>
+      <a href="/privacy" data-i18n="privacy">Privacy Policy</a>
     </div>
     <div class="footer-filing hidden" id="footer-filing" lang="zh-CN"></div>
   </footer>

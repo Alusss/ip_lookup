@@ -18,9 +18,10 @@
 1. **双栈 IP 查询**：自动并行检测并展示 IPv4 和 IPv6 地址
 2. **一键复制**：点击复制 IP 地址到剪贴板
 3. **IPv6 自动检测**：页面加载时自动检测，无需手动点击
-4. **JSON API**：携带 `Accept: application/json` 获取结构化数据（含城市、国家、ISP）
-5. **GeoIP 地理位置**（可选）：启用后 JSON API 返回客户端 IP 的地理位置信息
-6. **多语言**：自动中英文切换
+4. **JSON API**：携带 `Accept: application/json` 获取结构化数据（含城市、国家、ISP、ASN）
+5. **GeoIP 地理位置**（可选）：启用后 JSON API 返回客户端 IP 的地理位置与 ASN
+6. **/all 路由**（可选）：开启后始终返回含归属信息的 JSON
+7. **多语言**：仅简体中文浏览器显示中文，其余一律英文
 7. **多端适配**：桌面和移动端均优
 
 ## API 使用
@@ -37,7 +38,7 @@ curl https://ip4.iohow.com/
 
 # JSON（含 GeoIP）
 curl -H "Accept: application/json" https://ip4.iohow.com/
-# → {"ip":"203.0.113.42","version":"IPv4","city":"...","country":"...","isp":"..."}
+# → {"ip":"203.0.113.42","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}
 ```
 
 ## 竞品分析

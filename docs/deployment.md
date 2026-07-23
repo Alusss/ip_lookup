@@ -229,6 +229,7 @@ sudo bash deploy/scripts/update-cloudflare-ip.sh
 - Nginx: `/etc/nginx/conf.d/cloudflare-realip.conf`
 - Caddy: `/etc/caddy/cloudflare-trusted.conf`
 - Go: `/etc/ip-lookup/cf-cidrs.txt`（fsnotify 热加载）
+- nftables: `/etc/nftables/cloudflare-cidr.nft`（仅 nftables 已安装时生成）
 
 ---
 
@@ -256,9 +257,10 @@ echo "0 4 * * 0 root MAXMIND_LICENSE_KEY=your_key /etc/ip-lookup/update-geoip.sh
 # config.yaml
 geoip_enabled: true
 geoip_db_path: /var/lib/ip-lookup/GeoLite2-City.mmdb
+geoip_asn_db_path: /var/lib/ip-lookup/GeoLite2-ASN.mmdb  # 可选，提供 ASN
 ```
 
-数据库更新后 Go 进程自动通过 fsnotify 加载，无需重启。
+数据库更新后 Go 进程自动通过 fsnotify 加载，无需重启；修改开关/路径也可通过配置热加载生效。
 
 ---
 

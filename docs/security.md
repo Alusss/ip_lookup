@@ -6,7 +6,7 @@
 |------|------|----------|
 | L1 CDN | Cloudflare | WAF、DDoS 防护、边缘速率限制、TLS 终止 |
 | L2 Web 服务器 / CDN 头 | Caddy / Nginx / _headers | 真实 IP 还原、前置限流、安全 Header（CSP + Permissions-Policy + HSTS）、请求体拒绝 |
-| L3 Go 应用 | ip-lookup | IP 信任链、应用层限流、黑名单（IP+UA+CIDR）、Panic 恢复、超时控制、并发安全（atomic/mutex）、安全响应头、请求 ID 追踪 |
+| L3 Go 应用 | ip-lookup | IP 信任链、`cf_only` 只接受 CF/受信代理来源、应用层限流（可关）、黑名单（IP+UA+CIDR）、Panic 恢复、超时控制、并发安全（atomic/mutex）、安全响应头、请求 ID 追踪 |
 | L4 系统 | systemd + nftables | 资源隔离（systemd hardening）、源站防火墙（仅 CF CIDR） |
 
 ---
@@ -31,7 +31,7 @@ flowchart TD
 
 ### CF CIDR 热更新
 
-`/etc/ip-lookup/cf-cidrs.txt` 由自动同步脚本维护，Go 进程通过 fsnotify 监听，文件变更后在**5 秒内**原子替换内存中的可信 CIDR 集合，无需重启进程。
+`/etc/ip-lookup/cf-cidrs.txt` 由自动同步脚本维护，Go 进程通过 fsnotify 监听，文件变更后 200ms debounce 原子替换内存中的可信 CIDR 集合；另有 `cf_cidr_reload_interval`（默认 5m）兜底定时器周期重载，防 fsnotify 事件丢失，无需重启进程。
 
 ---
 
@@ -40,9 +40,10 @@ flowchart TD
 | 维度 | 速率 | Burst | 超出响应 |
 |------|------|-------|----------|
 | 单 IP | 10 req/min | 5 | `429` + `Retry-After: 6` |
-| 全局 | 1000 req/s | 1000 | `429` + `Retry-After: 1` |
+| 全局 | 5000 req/s | 5000 | `429` + `Retry-After: 1` |
 
 - 两桶独立：单 IP / 全局
+- `rate_enabled` 总开关（调试可关）、`rate_mode`（both/per_ip/global），均支持热加载
 - 5 分钟 TTL 清理空闲桶
 
 ---
@@ -65,7 +66,7 @@ flowchart TD
 | IdleTimeout | 60s | 复用连接 idle 上限 |
 | MaxHeaderBytes | 1KB | 本项目 header 极简 |
 | MaxConnsPerIP | 8 | 单 IP 并发上限（TryAcquire/Release 原子操作） |
-| URL 长度 | > 256B 拒绝 | 仅 `/`、`/health` 等短路径 |
+| URL 长度 | > 256B 拒绝 | 仅 `/`、`/all`、`/health` 等短路径 |
 | Body | 拒绝任何 body | ContentLength 先验 + Body 后关 |
 | Panic 恢复 | recovery 中间件 | 防止进程崩溃 |
 |并发安全 | atomic.Bool + sync.Mutex | `ready` 标志、`connCounter`、`Config` 热重载均无 data race |
@@ -147,7 +148,8 @@ Content-Security-Policy: default-src 'self';
 
 ## GeoIP 隐私说明
 
-启用 GeoIP 后，后端可根据客户端 IP 查询城市、国家和 ISP 信息。
+启用 GeoIP 后，后端可根据客户端 IP 查询城市、国家、ISP 和 ASN 信息。
 - 这些信息**仅用于即时 API 响应展示**，不持久化存储。
-- 查询结果通过 JSON API 返回，仅对携带 `Accept: application/json` 的请求提供。
+- 查询结果通过 JSON 返回：携带 `Accept: application/json` 的 `/` 请求，或 `all_api_enabled=true` 时的 `/all` 路由。
 - 纯文本 API 请求不受影响，仍只返回 IP 字符串。
+- 地名按 `Accept-Language` 返回 `zh-CN`/`en`；ASN 组织名仅英文。

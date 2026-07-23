@@ -17,6 +17,7 @@
 
   var ipv6Address = document.getElementById('ipv6-address');
   var ipv6Status = document.getElementById('ipv6-status');
+  var ipv6GeoLine = document.getElementById('ipv6-geo-line');
   var ipv6CopyBtn = document.getElementById('ipv6-copy-btn');
   var ipv6RefreshBtn = document.getElementById('ipv6-refresh-btn');
   var ipv6Card = document.getElementById('ipv6-card');
@@ -39,6 +40,7 @@
   var lastIpv6 = '';
   var lastIpv6FetchTime = 0;
   var geoFetched = false;
+  var geo6Fetched = false;
 
   function handleAdBar() {
     if (sessionStorage.getItem(AD_SESSION_KEY)) {
@@ -82,7 +84,7 @@
     statusMsg.textContent = '';
 
     if (state === 'loading') {
-      ipDisplay.textContent = msg || t('loading');
+      ipDisplay.textContent = msg || t('loading_short');
       ipDisplay.className = 'ip-address loading';
       if (refreshBtnText) refreshBtnText.textContent = t('refreshing');
       if (refreshSpinner) refreshSpinner.style.display = 'inline-block';
@@ -127,17 +129,34 @@
     }
   }
 
+  function formatGeo(data) {
+    if (!data) return '';
+    var parts = [];
+    if (data.city) parts.push(data.city);
+    if (data.country) parts.push(data.country);
+    var line = parts.join(', ');
+    if (data.asn) line = line ? line + ' \u00b7 ' + data.asn : data.asn;
+    return line;
+  }
+
   function fetchGeo(ip) {
     if (geoFetched || !ip) return;
     geoFetched = true;
     fetch(IP4_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
       .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
       .then(function (data) {
-        if (!data || !geoLine) return;
-        var parts = [];
-        if (data.city) parts.push(data.city);
-        if (data.country) parts.push(data.country);
-        if (parts.length) geoLine.textContent = parts.join(', ');
+        if (data && geoLine) geoLine.textContent = formatGeo(data);
+      })
+      .catch(function () { /* geo is non-critical, fail silently */ });
+  }
+
+  function fetchGeo6(ip) {
+    if (geo6Fetched || !ip) return;
+    geo6Fetched = true;
+    fetch(IP6_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
+      .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
+      .then(function (data) {
+        if (data && ipv6GeoLine) ipv6GeoLine.textContent = formatGeo(data);
       })
       .catch(function () { /* geo is non-critical, fail silently */ });
   }
@@ -182,15 +201,20 @@
     ipv6Status.textContent = '';
 
     if (state === 'loading') {
-      ipv6Address.textContent = t('ipv6_testing');
+      ipv6Address.textContent = t('loading_short');
       ipv6Address.className = 'ip-address loading';
       setIpv6Buttons(false, false, true);
     } else if (state === 'success') {
       ipv6Address.textContent = ip;
       ipv6Address.className = 'ip-address';
+      ipv6Status.className = 'status-msg success';
+      ipv6Status.textContent = t('success');
       setIpv6Buttons(true, true, false);
       ipv6Card.classList.remove('loading');
       ipv6Card.classList.add('tested');
+      setTimeout(function () {
+        if (ipv6State === 'success') ipv6Status.className = 'status-msg idle';
+      }, 2500);
     } else if (state === 'fail') {
       ipv6Address.textContent = '--';
       ipv6Address.className = 'ip-address loading';
@@ -227,6 +251,7 @@
         lastIpv6 = ip;
         lastIpv6FetchTime = Date.now();
         setIpv6State('success', ip);
+        fetchGeo6(ip);
       })
       .catch(function () {
         clearTimeout(timeoutId);
@@ -239,10 +264,11 @@
     if (ipv6State === 'loading') return;
     var now = Date.now();
     if (now - lastIpv6FetchTime < THROTTLE_MS && lastIpv6) {
+      ipv6State = 'throttled';
       ipv6Status.className = 'status-msg error';
       ipv6Status.textContent = t('throttled');
       setTimeout(function () {
-        if (ipv6State === 'success') ipv6Status.className = 'status-msg';
+        if (ipv6State !== 'loading') ipv6Status.className = 'status-msg idle';
       }, 2500);
       return;
     }
@@ -295,11 +321,33 @@
     if (!lastIp) fetchIp();
   }
 
+  function fitKnowledgeBar() {
+    var row = document.querySelector('.knowledge-row');
+    if (!row) return;
+    var links = Array.prototype.slice.call(row.querySelectorAll('a:not(.kb-more)'));
+    var more = row.querySelector('.kb-more');
+    links.forEach(function (a) { a.classList.remove('kb-hide'); });
+    if (more) more.classList.remove('kb-hide');
+    var gap = 8;
+    var rowWidth = row.clientWidth;
+    var total = more ? more.offsetWidth + gap : 0;
+    for (var i = 0; i < links.length; i++) {
+      total += links[i].offsetWidth + gap;
+      if (total > rowWidth) {
+        for (var j = i; j < links.length; j++) links[j].classList.add('kb-hide');
+        break;
+      }
+    }
+  }
+
   if (copyBtn) copyBtn.addEventListener('click', function () { copyText(lastIp, copyBtnText); });
   if (refreshBtn) refreshBtn.addEventListener('click', handleRefresh);
   if (ipv6CopyBtn) ipv6CopyBtn.addEventListener('click', function () { copyText(lastIpv6, ipv6CopyBtnText); });
   if (ipv6RefreshBtn) ipv6RefreshBtn.addEventListener('click', handleIpv6Refresh);
   window.addEventListener('online', handleOnline);
+  document.addEventListener('DOMContentLoaded', fitKnowledgeBar);
+  window.addEventListener('load', fitKnowledgeBar);
+  window.addEventListener('resize', fitKnowledgeBar);
 
   handleAdBar();
 

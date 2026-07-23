@@ -36,7 +36,7 @@ func TestReadyzHandler(t *testing.T) {
 func TestRootHandlerPureIP(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.ApiAdEnabled = false
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
 	global := NewGlobalRateLimiter(1000, 1000)
 	metrics := NewMetrics()
@@ -61,7 +61,7 @@ func TestRootHandlerPureIP(t *testing.T) {
 func TestRootHandlerWithAPIAd(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.ApiAdEnabled = true
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
 	global := NewGlobalRateLimiter(1000, 1000)
 	metrics := NewMetrics()
@@ -89,7 +89,7 @@ func TestRootHandlerWithAPIAd(t *testing.T) {
 func TestRootHandlerWebClient(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.ApiAdEnabled = true
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
 	global := NewGlobalRateLimiter(1000, 1000)
 	metrics := NewMetrics()
@@ -119,7 +119,7 @@ func TestJSONAPI(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.JsonApiEnabled = true
 	cfg.ApiAdEnabled = false
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
 	global := NewGlobalRateLimiter(1000, 1000)
 	metrics := NewMetrics()
@@ -278,7 +278,12 @@ func TestDetectLanguage(t *testing.T) {
 		want   string
 	}{
 		{"zh-CN,zh;q=0.9", "zh"},
-		{"zh-TW,zh;q=0.8", "zh"},
+		{"zh-Hans,en;q=0.8", "zh"},
+		{"zh-SG,en;q=0.8", "zh"},
+		{"zh", "zh"},
+		{"zh-TW,zh;q=0.8", "en"},
+		{"zh-HK,en;q=0.9", "en"},
+		{"zh-Hant,en;q=0.9", "en"},
 		{"en-US,en;q=0.9", "en"},
 		{"fr-FR,fr;q=0.9", "en"},
 		{"", "en"},
@@ -343,7 +348,7 @@ func TestFullMiddlewareChain(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.ApiAdEnabled = false
 	cfg.JsonApiEnabled = true
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
 	global := NewGlobalRateLimiter(1000, 1000)
 	metrics := NewMetrics()
@@ -545,42 +550,6 @@ func TestMonitorThresholds(t *testing.T) {
 	})
 }
 
-func TestCircuitBreaker(t *testing.T) {
-	cb := NewCircuitBreaker(3, 2, 100*time.Millisecond)
-
-	if !cb.Allow() {
-		t.Error("expected allow in closed state")
-	}
-
-	cb.Failure()
-	cb.Failure()
-	cb.Failure()
-
-	if cb.Allow() {
-		t.Error("expected deny in open state")
-	}
-
-	time.Sleep(150 * time.Millisecond)
-
-	if !cb.Allow() {
-		t.Error("expected allow after timeout (half-open)")
-	}
-
-	cb.Success()
-	cb.Success()
-
-	if !cb.Allow() {
-		t.Error("expected allow after recovery (closed)")
-	}
-
-	cb2 := NewCircuitBreaker(5, 1, time.Minute)
-
-	result := cb2.Allow()
-	if !result {
-		t.Error("initial state should be closed")
-	}
-}
-
 func TestFindBucket(t *testing.T) {
 	tests := []struct {
 		latency int64
@@ -620,7 +589,7 @@ func TestLoggingMiddlewareCapturesRejectedStatus(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.UADenylist = "badbot"
 	metrics := NewMetrics()
-	extractor := NewIPExtractor("/dev/null")
+	extractor := NewIPExtractor("/dev/null", 0)
 
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

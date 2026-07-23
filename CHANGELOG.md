@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.6.0] - 2026-07-23
+
+### Added
+
+- **限速开关与策略**：`rate_enabled`（总开关，可临时关闭便于调试）、`rate_mode`（`both`/`per_ip`/`global`），均支持热加载
+- **CF 只接受来源**：`cf_only` 开关，开启后拒绝非 Cloudflare 边缘、非受信代理的直连请求（403），应用层防御纵深
+- **`/all` 路由**：`all_api_enabled` 开关，开启时始终返回含 city/country/isp/asn 的 JSON；关闭时行为与 `/` 一致
+- **GeoIP ASN**：新增 GeoLite2-ASN 库支持（`geoip_asn_db_path`），响应增加 `asn` 字段（`ASxxxx 组织名`）
+- **GeoIP 中文地名**：按 `Accept-Language` 返回 `zh-CN`/`en` 地名（MaxMind 原生本地化，回退 en）
+- **GeoIP 热重载**：`GeoIP.Configure()` 支持运行时切换开关/库路径无需重启；fsnotify watcher 懒启动
+- **CF CIDR 兜底定时器**：`cf_cidr_reload_interval`（默认 5m）周期重载，防 fsnotify 事件丢失
+- **nftables CIDR 自动生成**：`update-cloudflare-ip.sh` 新增生成 `/etc/nftables/cloudflare-cidr.nft`（仅 nftables 存在时），补齐源站防火墙 include 缺口
+- **全站 favicon**：新增 `favicon.svg`，所有页面引用
+- 前端：IPv6 卡片新增 geo-line（显示地点+ASN）；知识栏自适应隐藏溢出链接（保留"了解更多"）；页脚重排（邮箱/版权+隐私/公安+ICP）
+- `openapi.yaml` 升至 v1.2.0（新增 `asn` 字段、`/all` 路由、403 响应）
+
+### Changed
+
+- **i18n 策略收紧**：仅简体中文浏览器（zh-CN/zh-Hans/zh-SG/zh）显示中文，繁体及其余一律英文（前后端一致）
+- **配置文件全面注释**：`config.yaml` 每项加中文说明、推荐值、用途
+- **`_headers` 缓存修正**：路径从错误的 `/frontend/*` 改为实际 `/js`、`/css`、`/img`、`/docs`；JS/CSS 改为 `no-cache, must-revalidate`（无指纹化，确保更新即时生效），HTML 全不缓存
+- 前端：顶部广告栏移出 container 贴顶；IPv4/IPv6 loading 文案统一"正在获取..."；IPv6 成功提示与节流自动隐藏与 IPv4 对齐
+- `NewIPExtractor` 增加 `reloadInterval` 参数；`NewGeoIP` 增加 `asnDbPath` 参数
+- 公安备案/ICP 备案顺序调整为公安在前
+
+### Removed
+
+- **死代码清理**：移除从未接入的 `circuitbreaker.go` 及其测试 `TestCircuitBreaker`（无明确接入目标，GeoIP 已优雅降级）
+
+### Fixed
+
+- [BUG] 前端 IPv6 节流提示不自动消失（清除时缺少 `idle` 类 + 状态机修正）
+- [BUG] `cf_cidr_reload_interval` 为死字段（从未读取）-- 接入为兜底定时器
+- [质量] `_headers` 缓存路径错误导致 JS/CSS 拿不到缓存策略、文档页可能被 CDN 缓存（F7 标题不刷新根因之一）
+
 ## [0.5.0] - 2026-07-23
 
 ### Added

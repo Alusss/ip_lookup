@@ -99,6 +99,9 @@ RemoteAddr → 检查来源 IP ∈ CF CIDR？
 
 | 端点/组件 | 说明 |
 |-----------|------|
+| `/` | IP 查询（纯文本或 JSON，按 Accept 协商） |
+| `/all` | 完整归属信息 JSON（`all_api_enabled` 开关控制；关时等同 `/`） |
+| `/ad-config` | 前端广告配置 |
 | `/health` | 存活检查 |
 | `/readyz` | 就绪检查 |
 | `/metrics` | Prometheus 指标（请求数/限流/在线连接/关闭耗时 + 按状态码计数 + 延迟分布直方图 + 运行时间） |
@@ -108,6 +111,6 @@ RemoteAddr → 检查来源 IP ∈ CF CIDR？
 
 - **默认**：systemd 管理 Go 二进制（双栈监听 :8080/:8081），Caddy/Nginx 做反向代理
 - **可选**：Docker 多阶段构建 + distroless 镜像
-- **CF CIDR 同步**：每日全量 + 每6h增量，Nginx/Caddy/Go 三份配置
-- **GeoIP**（可选）：GeoLite2 免费数据库，fsnotify 热加载，cron 每周更新
+- **CF CIDR 同步**：每日全量 + 每6h增量，Nginx/Caddy/Go/nftables 四份配置（nftables 可选）
+- **GeoIP**（可选）：GeoLite2 City + ASN 免费数据库，fsnotify 热加载 + 配置热重载，cron 每周更新
 - **源站防火墙**：nftables 仅放行 CF CIDR

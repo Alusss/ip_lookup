@@ -44,16 +44,15 @@ ip-lookup/
 │   ├── main.go         # 入口、双栈监听、优雅退出
 │   ├── config.go       # 配置管理（YAML + 环境变量 + fsnotify 热加载）
 │   ├── cache.go        # 通用并发 LRU 缓存（GeoIP 查询缓存底层）
-│   ├── handler.go      # HTTP 处理器（/ /ad-config /health /readyz /metrics）
-│   ├── ip_extract.go   # IP 提取与信任链（CF CIDR 热加载）
-│   ├── ratelimit.go    # 限流（Token Bucket，单 IP + 全局）
+│   ├── handler.go      # HTTP 处理器（/ /all /ad-config /health /readyz /metrics）
+│   ├── ip_extract.go   # IP 提取与信任链（CF CIDR 热加载 + 兜底定时器 + cf_only 校验）
+│   ├── ratelimit.go    # 限流（Token Bucket，单 IP + 全局，可开关/选模式）
 │   ├── ad.go           # 广告逻辑（API 广告 + Web 广告配置）
-│   ├── geoip.go        # GeoIP 查询（GeoLite2 + fsnotify 热加载）
+│   ├── geoip.go        # GeoIP 查询（GeoLite2 City+ASN + fsnotify 热加载 + 配置热重载）
 │   ├── metrics.go      # Prometheus 指标（含状态码/延迟分布/运行时间）
 │   ├── middleware.go   # HTTP 中间件链（requestID → realIP → recovery → securityHeaders → metrics(连接数) → methodCheck → bodyRejection → denylist → connLimit → cors → logging(计数+延迟+状态码)）
 │   ├── errors.go       # 错误消息集中管理
 │   ├── monitor.go      # 自监控告警引擎（阈值检查 + Webhook 推送）
-│   ├── circuitbreaker.go # 通用熔断器模块（为未来外部依赖预留）
 │   ├── main_test.go    # 单元测试 + E2E 集成测试
 │   └── config.yaml     # 默认配置
 ├── frontend/           # 前端静态文件

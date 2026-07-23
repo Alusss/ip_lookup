@@ -60,7 +60,8 @@ curl localhost:8080/readyz   # OK
 |------|----------|----------|
 | Nginx | `/etc/nginx/conf.d/cloudflare-realip.conf` | `nginx -s reload` |
 | Caddy | `/etc/caddy/cloudflare-trusted.conf` | `caddy reload` |
-| Go | `/etc/ip-lookup/cf-cidrs.txt` | fsnotify 热加载 |
+| Go | `/etc/ip-lookup/cf-cidrs.txt` | fsnotify 热加载（+ 5m 兜底定时器） |
+| nftables | `/etc/nftables/cloudflare-cidr.nft` | `systemctl reload nftables`（仅 nftables 已安装时生成） |
 
 失败处理：拉取失败保留旧配置；校验失败回滚；无变化不触发 reload。
 
@@ -68,9 +69,11 @@ curl localhost:8080/readyz   # OK
 
 ## GeoIP 数据库更新
 
-- 数据库：GeoLite2-City.mmdb（免费，需 MaxMind License Key）
-- 路径：`/var/lib/ip-lookup/GeoLite2-City.mmdb`
-- 更新：Go 进程通过 fsnotify 自动检测文件变化并热加载，无需重启。
+- 数据库：GeoLite2-City.mmdb（必需）+ GeoLite2-ASN.mmdb（可选，提供 ASN）
+- 路径：`/var/lib/ip-lookup/GeoLite2-City.mmdb`、`/var/lib/ip-lookup/GeoLite2-ASN.mmdb`
+- 更新：Go 进程通过 fsnotify 自动检测文件变化并热加载，无需重启
+- 热重载：修改 `geoip_enabled`/`geoip_db_path`/`geoip_asn_db_path` 后配置热加载自动重建查询器，无需重启
+- 地名本地化：按 `Accept-Language` 返回 `zh-CN`/`en`（仅简体中文浏览器返回中文）
 
 ### 手动更新
 
@@ -175,6 +178,9 @@ journalctl -u ip-lookup -n 50
 ### 限流误伤
 
 ```bash
+# 方式一：临时关闭限速（热加载，无需重启）
+echo "RATE_ENABLED=false" >> /etc/ip-lookup/env
+# 方式二：调高单 IP 限额
 echo "RATE_PER_IP=30" >> /etc/ip-lookup/env
 systemctl restart ip-lookup
 ```

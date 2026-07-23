@@ -13,6 +13,7 @@ type ipResponse struct {
 	City    string `json:"city,omitempty"`
 	Country string `json:"country,omitempty"`
 	ISP     string `json:"isp,omitempty"`
+	ASN     string `json:"asn,omitempty"`
 }
 
 type webAdConfig struct {
@@ -120,6 +121,12 @@ func rootHandler(cfg *Config, extractor *IPExtractor, perIPLimiter *PerIPRateLim
 			return
 		}
 
+		if cfg.GetCfOnly() && !extractor.IsSourceTrusted(r) {
+			logWarn(r, "cf_only: rejected direct (non-cf/proxy) source")
+			http.Error(w, errForbidden, http.StatusForbidden)
+			return
+		}
+
 		realIP, err := getRealIP(r, extractor)
 		if err != nil {
 			http.Error(w, errBadRequest, http.StatusBadRequest)
@@ -128,34 +135,14 @@ func rootHandler(cfg *Config, extractor *IPExtractor, perIPLimiter *PerIPRateLim
 
 		ipStr := realIP.String()
 
-		if !globalLimiter.Allow() {
-			metrics.IncRateLimitHits()
-			w.Header().Set("Retry-After", "1")
-			http.Error(w, errTooManyRequests, http.StatusTooManyRequests)
-			return
-		}
-		if !perIPLimiter.Allow(ipStr) {
-			metrics.IncRateLimitHits()
-			w.Header().Set("Retry-After", "6")
-			http.Error(w, errTooManyRequests, http.StatusTooManyRequests)
+		if !applyRateLimit(cfg, perIPLimiter, globalLimiter, ipStr, metrics, w) {
 			return
 		}
 
 		acceptsJSON := cfg.JsonApiEnabled && strings.Contains(r.Header.Get("Accept"), "application/json")
 
 		if acceptsJSON {
-			resp := ipResponse{
-				IP:      ipStr,
-				Version: ipVersion(ipStr),
-			}
-
-			if geo != nil {
-				if loc := geo.Lookup(ipStr); loc != nil {
-					resp.City = loc.City
-					resp.Country = loc.Country
-					resp.ISP = loc.ISP
-				}
-			}
+			resp := buildGeoResponse(cfg, geo, ipStr, r)
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Cache-Control", "no-cache, must-revalidate")
@@ -187,6 +174,88 @@ func rootHandler(cfg *Config, extractor *IPExtractor, perIPLimiter *PerIPRateLim
 			w.Write([]byte(response))
 		}
 	}
+}
+
+// allHandler mirrors the / route but, when all_api_enabled is on, always returns
+// a JSON document enriched with GeoIP + ASN. When the switch is off it delegates
+// to the root handler so /all behaves identically to /.
+func allHandler(cfg *Config, extractor *IPExtractor, perIPLimiter *PerIPRateLimiter, globalLimiter *GlobalRateLimiter, metrics *Metrics, geo *GeoIP) http.HandlerFunc {
+	root := rootHandler(cfg, extractor, perIPLimiter, globalLimiter, metrics, geo)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !cfg.GetAllApiEnabled() {
+			root.ServeHTTP(w, r)
+			return
+		}
+		if !ready.Load() {
+			http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		if cfg.GetCfOnly() && !extractor.IsSourceTrusted(r) {
+			http.Error(w, errForbidden, http.StatusForbidden)
+			return
+		}
+		realIP, err := getRealIP(r, extractor)
+		if err != nil {
+			http.Error(w, errBadRequest, http.StatusBadRequest)
+			return
+		}
+		ipStr := realIP.String()
+		if !applyRateLimit(cfg, perIPLimiter, globalLimiter, ipStr, metrics, w) {
+			return
+		}
+		resp := buildGeoResponse(cfg, geo, ipStr, r)
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-cache, must-revalidate")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			logError(r, "failed to encode /all response", "error", err.Error())
+		}
+	}
+}
+
+// applyRateLimit enforces the global / per-IP limiters according to the
+// rate_enabled switch and rate_mode. It writes a 429 response and returns false
+// when the request is rejected.
+func applyRateLimit(cfg *Config, perIPLimiter *PerIPRateLimiter, globalLimiter *GlobalRateLimiter, ipStr string, metrics *Metrics, w http.ResponseWriter) bool {
+	if !cfg.GetRateEnabled() {
+		return true
+	}
+	mode := cfg.GetRateMode()
+	if mode == "global" || mode == "both" {
+		if !globalLimiter.Allow() {
+			metrics.IncRateLimitHits()
+			w.Header().Set("Retry-After", "1")
+			http.Error(w, errTooManyRequests, http.StatusTooManyRequests)
+			return false
+		}
+	}
+	if mode == "per_ip" || mode == "both" {
+		if !perIPLimiter.Allow(ipStr) {
+			metrics.IncRateLimitHits()
+			w.Header().Set("Retry-After", "6")
+			http.Error(w, errTooManyRequests, http.StatusTooManyRequests)
+			return false
+		}
+	}
+	return true
+}
+
+// buildGeoResponse assembles an ipResponse, attaching localized GeoIP fields
+// (city/country/isp/asn) when a GeoIP reader is configured.
+func buildGeoResponse(cfg *Config, geo *GeoIP, ipStr string, r *http.Request) ipResponse {
+	resp := ipResponse{
+		IP:      ipStr,
+		Version: ipVersion(ipStr),
+	}
+	if geo != nil {
+		lang := cfg.detectLanguage(r)
+		if loc := geo.Lookup(ipStr, lang); loc != nil {
+			resp.City = loc.City
+			resp.Country = loc.Country
+			resp.ISP = loc.ISP
+			resp.ASN = loc.ASN
+		}
+	}
+	return resp
 }
 
 func ipVersion(ip string) string {

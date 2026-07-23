@@ -1,11 +1,18 @@
 (function () {
   'use strict';
 
+  // Site-wide i18n policy: ONLY Simplified Chinese browsers (zh-CN / zh-Hans /
+  // zh-SG / bare zh) get the Chinese UI; every other locale (including zh-TW,
+  // zh-HK, zh-Hant) gets English.
+  function isZhLang(l) {
+    l = (l || '').toLowerCase();
+    return l === 'zh' || l.indexOf('zh-cn') === 0 || l.indexOf('zh-hans') === 0 || l.indexOf('zh-sg') === 0;
+  }
+
   // Kill English flash for zh users: hide page until i18n applies.
   // Runs synchronously in <head> before first paint. Safety timeout
   // guarantees reveal even if DOMContentLoaded is delayed.
-  var __lang = (navigator.language || '').toLowerCase();
-  if (__lang.indexOf('zh') === 0) {
+  if (isZhLang(navigator.language || '')) {
     document.documentElement.style.visibility = 'hidden';
     setTimeout(function () { document.documentElement.style.visibility = ''; }, 400);
   }
@@ -28,6 +35,7 @@
       tagline: '快速查询您的公网 IP 地址',
       ipv4_label: 'IPv4 地址',
       loading: '正在获取你的 IP 地址...',
+      loading_short: '正在获取...',
       copy: '复制',
       copy_success: '已复制',
       refresh: '刷新',
@@ -67,6 +75,7 @@
       tagline: 'Instant Public IP Lookup',
       ipv4_label: 'IPv4 Address',
       loading: 'Getting your IP address...',
+      loading_short: 'Loading...',
       copy: 'Copy',
       copy_success: 'Copied',
       refresh: 'Refresh',
@@ -101,7 +110,7 @@
 
   function getLang() {
     var lang = navigator.language || navigator.userLanguage || 'en';
-    return lang.startsWith('zh') ? 'zh' : 'en';
+    return isZhLang(lang) ? 'zh' : 'en';
   }
 
   function t(key) {
@@ -140,20 +149,20 @@
       filingDiv.textContent = '';
       if (isZh && (SITE_CONFIG.icp || SITE_CONFIG.gongan)) {
         filingDiv.classList.remove('hidden');
-        if (SITE_CONFIG.icp) {
-          var s1 = document.createElement('span');
-          s1.textContent = SITE_CONFIG.icp;
-          filingDiv.appendChild(s1);
-        }
         if (SITE_CONFIG.gongan) {
-          if (filingDiv.childNodes.length) filingDiv.appendChild(document.createTextNode(' | '));
-          var s2 = document.createElement('span');
+          var sG = document.createElement('span');
           var img = document.createElement('img');
           img.src = 'img/gonganbeian.png';
           img.alt = '';
-          s2.appendChild(img);
-          s2.appendChild(document.createTextNode(SITE_CONFIG.gongan));
-          filingDiv.appendChild(s2);
+          sG.appendChild(img);
+          sG.appendChild(document.createTextNode(SITE_CONFIG.gongan));
+          filingDiv.appendChild(sG);
+        }
+        if (SITE_CONFIG.icp) {
+          if (filingDiv.childNodes.length) filingDiv.appendChild(document.createTextNode(' | '));
+          var sI = document.createElement('span');
+          sI.textContent = SITE_CONFIG.icp;
+          filingDiv.appendChild(sI);
         }
       } else {
         filingDiv.classList.add('hidden');

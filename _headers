@@ -1,11 +1,20 @@
-# Static assets: long cache, immutable
-/frontend/*.js
-  Cache-Control: public, max-age=31536000, immutable
-/frontend/*.css
-  Cache-Control: public, max-age=31536000, immutable
+# JS/CSS: no build-time fingerprinting, so revalidate to pick up updates
+# immediately (browser sends If-None-Match; Cloudflare returns 304 if unchanged).
+/js/*.js
+  Cache-Control: no-cache, must-revalidate
+/css/*.css
+  Cache-Control: no-cache, must-revalidate
 
-# HTML: no cache (always fresh)
+# Images: rarely change, cache 7 days
+/img/*
+  Cache-Control: public, max-age=604800
+
+# HTML: always fresh (homepage, privacy page, and all docs pages)
 /index.html
+  Cache-Control: no-cache, must-revalidate
+/privacy.html
+  Cache-Control: no-cache, must-revalidate
+/docs/*
   Cache-Control: no-cache, must-revalidate
 
 # Security headers

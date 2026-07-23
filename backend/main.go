@@ -41,16 +41,21 @@ func main() {
 		"listen_v4", cfg.ListenV4(),
 		"listen_v6", cfg.ListenV6(),
 		"listen_metrics", cfg.ListenMetrics(),
+		"rate_enabled", cfg.RateEnabled,
+		"rate_mode", cfg.RateMode,
 		"rate_per_ip", cfg.RatePerIP,
 		"rate_global", cfg.RateGlobal,
+		"cf_only", cfg.CfOnly,
+		"all_api_enabled", cfg.AllApiEnabled,
 		"api_ad_enabled", cfg.ApiAdEnabled,
 		"web_ad_enabled", cfg.WebAdEnabled,
 		"json_api_enabled", cfg.JsonApiEnabled,
 		"geoip_enabled", cfg.GeoipEnabled,
+		"geoip_asn_db_path", cfg.GeoipAsnDbPath,
 		"log_level", cfg.LogLevel,
 	)
 
-	extractor := NewIPExtractor(cfg.CfCidrPath)
+	extractor := NewIPExtractor(cfg.CfCidrPath, cfg.CfCidrReloadInterval)
 	extractor.UpdateProxyCIDRs(cfg.GetTrustedProxyCIDRs())
 
 	perIPLimiter := NewPerIPRateLimiter(rate.Limit(cfg.RatePerIP)/60, cfg.RatePerIPBurst, cfg.RateCleanupInterval)
@@ -61,7 +66,7 @@ func main() {
 	metrics := NewMetrics()
 	connCounter := newConnCounter()
 
-	geo := NewGeoIP(cfg.GeoipDbPath, cfg.GeoipEnabled)
+	geo := NewGeoIP(cfg.GeoipDbPath, cfg.GeoipAsnDbPath, cfg.GeoipEnabled)
 	if geo != nil {
 		defer geo.Close()
 	}
@@ -74,6 +79,7 @@ func main() {
 	mux.HandleFunc("/health", healthHandler)
 	mux.HandleFunc("/readyz", readyzHandler)
 	mux.HandleFunc("/ad-config", adConfigHandler(cfg))
+	mux.HandleFunc("/all", allHandler(cfg, extractor, perIPLimiter, globalLimiter, metrics, geo))
 	mux.HandleFunc("/", rootHandler(cfg, extractor, perIPLimiter, globalLimiter, metrics, geo))
 
 	metricsMux := http.NewServeMux()
@@ -153,6 +159,10 @@ func main() {
 
 	if err := cfg.StartHotReload(func(newCfg *Config) {
 		extractor.UpdateProxyCIDRs(newCfg.GetTrustedProxyCIDRs())
+		if geo != nil {
+			en, city, asn := newCfg.GetGeoipConfig()
+			geo.Configure(en, city, asn)
+		}
 	}); err != nil {
 		logWarn(nil, "config hot reload not available", "error", err.Error())
 	}
