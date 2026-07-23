@@ -1,6 +1,16 @@
 (function () {
   'use strict';
 
+  // ===================================================
+  // 站点可配置信息 / Site Configurable Data
+  // 修改此处即可更新全局占位信息，后续替换成你自己的数据
+  // ===================================================
+  var SITE_CONFIG = {
+    email: 'admin@example.com',           // 联系邮箱（中英文界面均显示）
+    icp: '京ICP备XXXXXXXX号-X',            // ICP 备案号（仅中文界面显示）
+    gongan: '京公网安备 XXXXXXXXXXXXXX 号', // 公安备案号（仅中文界面显示）
+  };
+
   var I18N = {
     zh: {
       title: 'IP 查询 - 查看你的 IP 地址 & IPv6 连通性检测',
@@ -27,7 +37,7 @@
       ipv6_fail: '你的网络未启用 Internet IPv6',
       privacy: '隐私政策',
       learn_ipv6: '了解 IPv6',
-      beian: '',
+      email_label: '📧 邮箱',
     },
     en: {
       title: 'IP Lookup - Check Your IP Address & IPv6 Connectivity',
@@ -54,7 +64,7 @@
       ipv6_fail: 'Your network does not support IPv6 connectivity',
       privacy: 'Privacy Policy',
       learn_ipv6: 'Learn about IPv6',
-      beian: '',
+      email_label: '📧 Email',
     },
   };
 
@@ -93,13 +103,19 @@
       });
     });
 
-    var beian = document.getElementById('beian');
-    if (beian) {
-      if (isZh) {
-        beian.style.display = 'inline';
-        beian.textContent = t('beian') || '';
+    var emailAddr = document.getElementById('email-addr');
+    if (emailAddr) emailAddr.textContent = SITE_CONFIG.email;
+
+    var filingDiv = document.getElementById('footer-filing');
+    if (filingDiv) {
+      if (isZh && (SITE_CONFIG.icp || SITE_CONFIG.gongan)) {
+        filingDiv.classList.remove('hidden');
+        var parts = [];
+        if (SITE_CONFIG.icp) parts.push(SITE_CONFIG.icp);
+        if (SITE_CONFIG.gongan) parts.push(SITE_CONFIG.gongan);
+        filingDiv.textContent = parts.join(' | ');
       } else {
-        beian.style.display = 'none';
+        filingDiv.classList.add('hidden');
       }
     }
   }
