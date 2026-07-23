@@ -3,64 +3,166 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy - IP Lookup</title>
-<meta name="description" content="Privacy policy for IP Lookup. We do not collect, store, or share personal identifiable information.">
+<title data-i18n="privacy_title">Privacy Policy - IP Lookup</title>
+<meta name="description" content="Privacy Policy for IP Lookup. We do not collect personal identifiable information, use no cookies, and mask IP addresses in operational logs. GDPR-compliant.">
 <link rel="canonical" href="https://ip.iohow.com/privacy">
 <link rel="stylesheet" href="/css/base.css">
 <style>
-.container{max-width:720px;margin:0 auto;padding:24px 24px 48px}
-article h1{margin-bottom:8px}
+.container{max-width:720px;margin:0 auto;padding:24px 24px 64px}
+article h1{font-size:30px;margin-bottom:8px}
 p.date{color:var(--text-secondary);font-size:14px;margin-bottom:32px}
-article h2{font-size:20px;margin-top:32px;margin-bottom:12px}
+article h2{font-size:20px;margin-top:36px;margin-bottom:12px}
 article p,article li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
 article ul{padding-left:20px;margin-bottom:16px}
 article strong{color:var(--text)}
+article a{color:var(--accent)}
 .back{margin-top:40px}
 </style>
+<script src="/js/i18n.js"></script>
 </head>
 <body>
 <header class="topbar">
   <a href="/" class="topbar-brand" aria-label="IP Lookup home">
-    <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
-      <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="2"/>
-      <circle cx="18" cy="18" r="6" fill="currentColor"/>
-      <path d="M18 2v6M18 28v6M2 18h6M28 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+      <rect x="3" y="3" width="42" height="42" rx="12" stroke="url(#lg)" stroke-width="2"/>
+      <path d="M24 24L11 13M24 24L37 13M24 24L11 35M24 24L37 35" stroke="url(#lg)" stroke-width="1.5" opacity="0.55"/>
+      <circle cx="24" cy="24" r="4.5" fill="url(#lg)"/>
+      <circle cx="11" cy="13" r="2.6" fill="url(#lg)"/><circle cx="37" cy="13" r="2.6" fill="url(#lg)"/>
+      <circle cx="11" cy="35" r="2.6" fill="url(#lg)"/><circle cx="37" cy="35" r="2.6" fill="url(#lg)"/>
     </svg>
     <span>IP Lookup</span>
   </a>
 </header>
 <div class="container">
   <article>
-    <h1>Privacy Policy</h1>
-    <p class="date">Last updated: July 22, 2026</p>
+    <div class="lang-zh">
+      <h1>隐私政策</h1>
+      <p class="date">最后更新：2026 年 7 月 23 日</p>
 
-    <h2>Data Collection</h2>
-    <p>IP Lookup does not collect, store, or share any personal identifiable information (PII).</p>
-    <ul>
-      <li><strong>IP Addresses</strong>: Your IP address is used solely to display the lookup result. It is not logged, stored, or persisted in any database.</li>
-      <li><strong>Request Logs</strong>: Operational logs contain masked IP addresses (e.g., 203.0.113.0 for IPv4) and are retained for a maximum of 30 days for security monitoring purposes only.</li>
-      <li><strong>No Cookies</strong>: This site does not use cookies, localStorage, or any client-side tracking technology.</li>
-      <li><strong>No Analytics Cookies</strong>: We use Cloudflare Web Analytics, a privacy-first analytics tool that does not use cookies or collect PII.</li>
-    </ul>
+      <p>IP Lookup（以下简称"本服务"）尊重并依法保护每一位用户的隐私。本政策说明我们在您使用本网站及 API 时，数据的收集、使用与保护方式。本服务遵循"数据最小化"原则：我们只收集为提供即时查询所必需的信息，不建立用户画像，不进行行为追踪。</p>
 
-    <h2>Data Sharing</h2>
-    <p>We do not sell, trade, or share your data with third parties. API responses are sent directly to your browser and are not cached or recorded.</p>
+      <h2>我们收集的信息</h2>
+      <ul>
+        <li><strong>IP 地址</strong>：您的公网 IP 地址仅在请求期间用于即时展示查询结果，不写入持久化数据库，请求结束后即丢弃。</li>
+        <li><strong>GeoIP 地理位置（可选功能，默认关闭）</strong>：当服务端启用 GeoIP 时，会根据您的 IP 在内存中查询城市、国家、ISP 等信息并随 JSON API 返回；该结果不记录、不存储、不分享。</li>
+        <li><strong>不收集个人可识别信息（PII）</strong>：我们不收集姓名、邮箱、设备标识符等 PII。您无需注册或登录即可使用全部功能。</li>
+      </ul>
 
-    <h2>Third-Party Services</h2>
-    <p>This service uses Cloudflare as CDN and DNS provider. Cloudflare's privacy policy applies to their edge network processing. We do not control what data Cloudflare collects at their edge.</p>
+      <h2>日志与数据保留</h2>
+      <ul>
+        <li><strong>IP 脱敏</strong>：运维日志中的 IP 地址一律脱敏处理（IPv4 仅保留前三段，IPv6 仅保留前四组），不会出现完整 IP。</li>
+        <li><strong>保留期限</strong>：日志仅用于安全监控与故障排查，自动轮转清理，最长保留 30 天。</li>
+        <li><strong>不记录查询内容</strong>：日志不含您的查询行为或返回的具体结果。</li>
+      </ul>
 
-    <h2>Your Rights (GDPR)</h2>
-    <p>If you are in the European Economic Area (EEA), you have the right to:</p>
-    <ul>
-      <li>Access your data (we hold none)</li>
-      <li>Request deletion of your data (nothing to delete)</li>
-      <li>Object to processing (no processing occurs)</li>
-    </ul>
+      <h2>Cookie 与跟踪技术</h2>
+      <p>本服务<strong>不使用</strong> Cookie、localStorage（广告关闭偏好除外）、Web Beacon、指纹或任何客户端跟踪技术。我们使用 Cloudflare Web Analytics——一种无 Cookie、不收集 PII 的隐私优先统计方案。我们不使用 Google Analytics 等依赖 Cookie 的统计工具，因此无需 Cookie 同意弹窗。</p>
 
-    <h2>Contact</h2>
-    <p>For privacy-related inquiries, please <a href="mailto:admin@example.com">email us</a>.</p>
+      <h2>广告</h2>
+      <p>页面顶部可能展示一行文字广告。该广告为静态展示，不基于您的行为定向，不跟踪您的浏览。点击关闭按钮后，该偏好仅在当前会话（sessionStorage）生效，不跨会话保留，关闭浏览器即清除。</p>
 
-    <div class="back"><a href="/">&larr; Back to IP Lookup</a></div>
+      <h2>第三方服务</h2>
+      <ul>
+        <li><strong>Cloudflare</strong>：作为 CDN 与 DNS 提供商，在其边缘网络处理请求。Cloudflare 自身的隐私政策适用于其边缘处理过程，我们无法控制 Cloudflare 在边缘收集的数据。</li>
+        <li><strong>MaxMind GeoIP</strong>：当启用 GeoIP 时，使用本地化的 MaxMind 数据库进行 IP 到地理位置的映射，查询在服务端本地完成，不向 MaxMind 发送您的 IP。</li>
+      </ul>
+
+      <h2>数据共享与出售</h2>
+      <p>我们<strong>不会</strong>出售、交易或与任何第三方共享您的数据。API 响应直接返回给您的浏览器，不缓存、不转发、不记录。</p>
+
+      <h2>您的权利（GDPR / 个人信息保护）</h2>
+      <p>无论您身处欧洲经济区（EEA）还是中国大陆，依 GDPR 或《个人信息保护法》您均享有以下权利：</p>
+      <ul>
+        <li>访问权：访问您的数据（我们未持有任何用户数据）。</li>
+        <li>删除权：请求删除您的数据（无可删除内容）。</li>
+        <li>反对权：反对数据处理（我们不进行持续处理）。</li>
+        <li>撤回权：无需撤回同意，因我们从不索取同意。</li>
+      </ul>
+      <p>由于我们不收集可识别您的个人信息，上述权利实际上无可执行对象；如有疑问仍可通过下方邮箱联系。</p>
+
+      <h2>安全措施</h2>
+      <ul>
+        <li>所有连接强制 HTTPS 加密传输。</li>
+        <li>服务进程以专用最小权限用户运行，文件系统只读。</li>
+        <li>Content-Security-Policy 限制外部资源加载，默认不连任何第三方域。</li>
+        <li>真实 IP 信任链与限流机制防止伪造与滥用。</li>
+      </ul>
+
+      <h2>儿童隐私</h2>
+      <p>本服务为通用网络工具，不针对 13 岁以下儿童，也不 knowingly 收集儿童信息。</p>
+
+      <h2>政策变更</h2>
+      <p>本政策可能不时更新，更新后将在本页面公示并以顶部"最后更新"日期为准。重大变更会通过页面公告提示。</p>
+
+      <h2>联系我们</h2>
+      <p>如有任何隐私相关问题或数据请求，请发送邮件至 <a href="mailto:contact@iohow.com">contact@iohow.com</a>。</p>
+    </div>
+
+    <div class="lang-en">
+      <h1>Privacy Policy</h1>
+      <p class="date">Last updated: July 23, 2026</p>
+
+      <p>IP Lookup ("the Service") respects and protects the privacy of every user. This policy explains how data is collected, used, and safeguarded when you use the website and API. The Service follows a data-minimization principle: we collect only what is necessary to serve an instant lookup, build no user profiles, and perform no behavioral tracking.</p>
+
+      <h2>Information We Collect</h2>
+      <ul>
+        <li><strong>IP address</strong>: Your public IP address is used only during the request to display the lookup result instantly. It is never written to a persistent database and is discarded once the request completes.</li>
+        <li><strong>GeoIP location (optional, off by default)</strong>: When GeoIP is enabled server-side, your IP is resolved to city, country, and ISP in memory and returned with the JSON API. The result is not logged, stored, or shared.</li>
+        <li><strong>No personally identifiable information (PII)</strong>: We do not collect names, emails, device identifiers, or any PII. No registration or login is required to use any feature.</li>
+      </ul>
+
+      <h2>Logs &amp; Data Retention</h2>
+      <ul>
+        <li><strong>IP masking</strong>: Every IP address in operational logs is masked (IPv4 keeps the first three octets, IPv6 keeps the first four groups). Full IPs never appear in logs.</li>
+        <li><strong>Retention</strong>: Logs are used solely for security monitoring and troubleshooting, auto-rotate, and are retained for at most 30 days.</li>
+        <li><strong>No query content</strong>: Logs do not record your query behavior or the specific results returned.</li>
+      </ul>
+
+      <h2>Cookies &amp; Tracking</h2>
+      <p>The Service uses <strong>no</strong> cookies, no localStorage (except the ad-dismissal preference), no web beacons, no fingerprinting, and no client-side tracking. We use Cloudflare Web Analytics, a privacy-first, cookieless analytics solution that collects no PII. We do not use Google Analytics or any cookie-based analytics, so no cookie-consent banner is required.</p>
+
+      <h2>Advertising</h2>
+      <p>A single text ad may appear at the top of the page. It is shown statically, is not behaviorally targeted, and does not track your browsing. After you dismiss it, the preference is kept only for the current session (sessionStorage) and is cleared when the browser closes.</p>
+
+      <h2>Third-Party Services</h2>
+      <ul>
+        <li><strong>Cloudflare</strong>: Serves as CDN and DNS provider and processes requests at its edge. Cloudflare's own privacy policy governs its edge processing; we do not control what Cloudflare collects at the edge.</li>
+        <li><strong>MaxMind GeoIP</strong>: When GeoIP is enabled, a local MaxMind database maps IPs to locations. The lookup happens locally on the server; your IP is never sent to MaxMind.</li>
+      </ul>
+
+      <h2>Data Sharing &amp; Sale</h2>
+      <p>We <strong>do not</strong> sell, trade, or share your data with any third party. API responses are returned directly to your browser, never cached, forwarded, or recorded.</p>
+
+      <h2>Your Rights (GDPR / PIPL)</h2>
+      <p>Whether you are in the European Economic Area (EEA) or mainland China, under GDPR or the Personal Information Protection Law (PIPL) you have the following rights:</p>
+      <ul>
+        <li>Access: access your data (we hold none).</li>
+        <li>Erasure: request deletion of your data (nothing to delete).</li>
+        <li>Objection: object to processing (no ongoing processing occurs).</li>
+        <li>Withdrawal: no consent to withdraw, since we never ask for it.</li>
+      </ul>
+      <p>Because we collect no information that identifies you, these rights have no actionable target; should you still have concerns, contact us via the email below.</p>
+
+      <h2>Security Measures</h2>
+      <ul>
+        <li>All connections are forced over HTTPS.</li>
+        <li>The service runs as a dedicated least-privilege user on a read-only filesystem.</li>
+        <li>Content-Security-Policy restricts external resources; by default no third-party origin is contacted.</li>
+        <li>A real-IP trust chain and rate limiting prevent spoofing and abuse.</li>
+      </ul>
+
+      <h2>Children's Privacy</h2>
+      <p>The Service is a general-purpose network utility, not directed at children under 13, and we do not knowingly collect information from children.</p>
+
+      <h2>Policy Changes</h2>
+      <p>This policy may be updated periodically. Updates will be reflected on this page with a revised "Last updated" date. Material changes will be announced via a page notice.</p>
+
+      <h2>Contact</h2>
+      <p>For any privacy-related questions or data requests, email <a href="mailto:contact@iohow.com">contact@iohow.com</a>.</p>
+    </div>
+
+    <div class="back"><a href="/">&larr; <span data-i18n="back_home">Back to IP Lookup</span></a></div>
   </article>
 </div>
 </body>

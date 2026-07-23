@@ -29,25 +29,26 @@
 </script>
 <link rel="stylesheet" href="/css/base.css">
 <style>
-.container{width:100%;max-width:640px;padding:24px 20px;display:flex;flex-direction:column;min-height:100vh;justify-content:center}
+.container{width:100%;max-width:640px;margin:0 auto;padding:32px 20px 24px;min-height:100vh}
 .ad-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;font-size:14px;gap:12px}
 .ad-bar a{color:var(--accent)}
 .ad-bar a:hover{text-decoration:underline}
 .ad-bar .close-ad{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;flex-shrink:0}
 .ad-bar .close-ad:hover{color:var(--text);background:var(--border)}
 .ad-bar.hidden{display:none}
-header{text-align:center;margin-bottom:32px}
-.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px}
-.logo svg{width:36px;height:36px;color:var(--accent)}
-.logo h1{font-size:30px}
-header p{color:var(--text-secondary);font-size:14px;margin-top:4px}
+header{text-align:center;margin-bottom:28px}
+.logo{display:inline-flex;align-items:center;gap:14px;margin-bottom:6px}
+.logo svg{width:72px;height:72px}
+.logo h1{font-size:60px;font-weight:700;letter-spacing:-1px;line-height:1.1}
+header p{color:var(--text-secondary);font-size:17px;margin-top:2px}
 main{display:flex;flex-direction:column}
 .card{margin-bottom:16px}
 .card.loading{opacity:.7}
 .ip-display{text-align:center}
-.ip-display .label{font-size:13px;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:500}
+.ip-display .label{font-size:15px;color:var(--text-secondary);margin-bottom:10px;font-weight:500;letter-spacing:.2px}
 .ip-display .ip-address{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px;word-break:break-all;min-height:44px;display:flex;align-items:center;justify-content:center}
 .ip-display .ip-address.loading{color:var(--text-secondary)}
+#ipv6-address{font-size:clamp(18px,4.5vw,26px);white-space:nowrap;word-break:normal;display:block;line-height:44px;overflow-x:auto;text-align:center}
 .ip-display .status-msg{font-size:13px;margin-top:8px;min-height:20px;transition:opacity .3s}
 .ip-display .status-msg.success{color:var(--success)}
 .ip-display .status-msg.error{color:var(--error)}
@@ -56,16 +57,19 @@ main{display:flex;flex-direction:column}
 .geo-line:empty{min-height:0;margin-top:0}
 .actions{display:flex;gap:12px;justify-content:center;margin-top:20px}
 .btn.loading .btn-text{opacity:.7}
-footer{border-top:1px solid var(--border);margin-top:32px;text-align:center;padding:20px 0 12px;color:var(--text-secondary);font-size:12px}
-footer a{color:var(--text-secondary)}
-footer a:hover{color:var(--text)}
-footer .footer-info{margin-bottom:8px}
-footer .footer-email{font-size:13px;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
-footer .footer-filing{font-size:11px;opacity:.7;margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
-footer .footer-filing.hidden{display:none}
-footer .footer-filing img{width:14px;height:14px;vertical-align:middle}
-footer .footer-links{display:flex;gap:16px;justify-content:center;margin-bottom:6px;flex-wrap:wrap}
-@media(max-width:480px){.container{padding:16px 12px}.ip-display .ip-address{font-size:26px}.logo h1{font-size:26px}}
+footer{margin-top:32px;padding:0 0 16px;text-align:center;color:var(--text-secondary);font-size:13px}
+.knowledge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:0 0 20px;margin-bottom:4px;border-bottom:1px solid var(--border)}
+.knowledge-row a{font-size:13px;color:var(--text-secondary);padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:color .2s,border-color .2s,background .2s}
+.knowledge-row a:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);text-decoration:none}
+.knowledge-row a.kb-more{color:var(--accent);border-color:rgba(99,102,241,.5);font-weight:500}
+.footer-main{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:16px}
+.footer-main .sep{opacity:.4}
+.footer-main a{color:var(--text-secondary)}
+.footer-main a:hover{color:var(--text)}
+.footer-filing{font-size:11px;opacity:.7;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.footer-filing.hidden{display:none}
+.footer-filing img{width:14px;height:14px;vertical-align:middle}
+@media(max-width:480px){.container{padding:20px 14px 16px}.logo{gap:10px}.logo svg{width:48px;height:48px}.logo h1{font-size:36px}.ip-display .ip-address{font-size:26px}header p{font-size:15px}}
 </style>
 <script src="js/i18n.js"></script>
 </head>
@@ -77,10 +81,15 @@ footer .footer-links{display:flex;gap:16px;justify-content:center;margin-bottom:
   </div>
   <header>
     <div class="logo">
-      <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
-        <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="2"/>
-        <circle cx="18" cy="18" r="6" fill="currentColor"/>
-        <path d="M18 2v6M18 28v6M2 18h6M28 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+        <rect x="3" y="3" width="42" height="42" rx="12" stroke="url(#lg)" stroke-width="2"/>
+        <path d="M24 24L11 13M24 24L37 13M24 24L11 35M24 24L37 35" stroke="url(#lg)" stroke-width="1.5" opacity="0.55"/>
+        <circle cx="24" cy="24" r="4.5" fill="url(#lg)"/>
+        <circle cx="11" cy="13" r="2.6" fill="url(#lg)"/>
+        <circle cx="37" cy="13" r="2.6" fill="url(#lg)"/>
+        <circle cx="11" cy="35" r="2.6" fill="url(#lg)"/>
+        <circle cx="37" cy="35" r="2.6" fill="url(#lg)"/>
       </svg>
       <h1 data-i18n="site_name">IP Lookup</h1>
     </div>
@@ -110,20 +119,35 @@ footer .footer-links{display:flex;gap:16px;justify-content:center;margin-bottom:
       <div class="label"><span data-i18n="ipv6_label">IPv6 Address</span></div>
       <div id="ipv6-address" class="ip-address loading" aria-live="polite" data-i18n="ipv6_testing">Testing...</div>
       <div id="ipv6-status" class="status-msg idle" role="status"></div>
+      <div class="actions">
+        <button class="btn btn-primary" id="ipv6-copy-btn" aria-label="Copy IPv6 address" disabled>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="10" height="10" rx="1.5"/><path d="M4 4V2.5A1.5 1.5 0 015.5 1h8A1.5 1.5 0 0115 2.5v8a1.5 1.5 0 01-1.5 1.5H12"/></svg>
+          <span data-i18n="copy">Copy</span>
+        </button>
+        <button class="btn" id="ipv6-refresh-btn" aria-label="Refresh IPv6 address">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8a7 7 0 0113.3-3M15 8a7 7 0 01-13.3 3"/><path d="M1 2v4h4M15 14v-4h-4"/></svg>
+          <span class="btn-text" data-i18n="refresh">Refresh</span>
+          <span class="spinner" style="display:none"></span>
+        </button>
+      </div>
     </div>
   </main>
   <footer>
-    <div class="footer-info">
-      <div class="footer-email">
-        <span data-i18n="email_label">📧 Email</span>: <span id="email-addr"></span>
-      </div>
-      <div class="footer-filing hidden" id="footer-filing" lang="zh-CN"></div>
-    </div>
-    <div class="footer-links">
+    <nav class="knowledge-row" aria-label="Knowledge">
+      <a href="/docs/what-is-ipv6" data-i18n="kb_ipv6">What is IPv6?</a>
+      <a href="/docs/ipv6-test-guide" data-i18n="kb_ipv6_test">IPv6 Test Guide</a>
+      <a href="/docs/what-is-ip-address" data-i18n="kb_ip_addr">What is an IP Address?</a>
+      <a href="/docs/public-vs-private-ip" data-i18n="kb_pub_priv">Public vs Private IP</a>
+      <a class="kb-more" href="/docs/" data-i18n="kb_more">Learn more &rarr;</a>
+    </nav>
+    <div class="footer-main">
       <a href="/privacy" data-i18n="privacy">Privacy Policy</a>
-      <a href="/docs/what-is-ipv6" data-i18n="learn_ipv6">Learn about IPv6</a>
+      <span class="sep">&middot;</span>
+      <span><span data-i18n="email_label">Email</span>: <a href="mailto:contact@iohow.com">contact@iohow.com</a></span>
+      <span class="sep">&middot;</span>
+      <span id="copyright-text"></span>
     </div>
-    <p>&copy; <span id="year"></span> IP Lookup</p>
+    <div class="footer-filing hidden" id="footer-filing" lang="zh-CN"></div>
   </footer>
 </div>
 <script defer src="js/app.js"></script>

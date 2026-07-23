@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="what_is_ip_address_title">What is an IP Address? - IP Lookup</title>
+<meta name="description" content="What is an IP address? Learn how IP addresses work, the difference between IPv4 and IPv6, and how they are assigned to your devices.">
+<link rel="canonical" href="https://ip.iohow.com/docs/what-is-ip-address">
+<link rel="stylesheet" href="/css/base.css">
+<style>
+.container{max-width:720px;margin:0 auto;padding:24px 24px 64px}
+article h1{font-size:30px;margin-bottom:16px}
+article h2{font-size:20px;margin-top:32px;margin-bottom:12px}
+article p,article li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
+article ul{padding-left:20px;margin-bottom:16px}
+article strong{color:var(--text)}
+article code{font-family:var(--mono)}
+.cta{background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;text-align:center;margin-top:32px}
+.cta a{display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-weight:500}
+.cta a:hover{background:var(--accent-hover);text-decoration:none}
+.back{margin-top:32px}
+</style>
+<script src="/js/i18n.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a href="/" class="topbar-brand" aria-label="IP Lookup home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+      <rect x="3" y="3" width="42" height="42" rx="12" stroke="url(#lg)" stroke-width="2"/>
+      <path d="M24 24L11 13M24 24L37 13M24 24L11 35M24 24L37 35" stroke="url(#lg)" stroke-width="1.5" opacity="0.55"/>
+      <circle cx="24" cy="24" r="4.5" fill="url(#lg)"/>
+      <circle cx="11" cy="13" r="2.6" fill="url(#lg)"/><circle cx="37" cy="13" r="2.6" fill="url(#lg)"/>
+      <circle cx="11" cy="35" r="2.6" fill="url(#lg)"/><circle cx="37" cy="35" r="2.6" fill="url(#lg)"/>
+    </svg>
+    <span>IP Lookup</span>
+  </a>
+</header>
+<div class="container">
+  <article>
+    <div class="lang-zh">
+      <h1>什么是 IP 地址？</h1>
+      <p>IP 地址（Internet Protocol address）是分配给网络上每一台设备的唯一编号，作用类似于收件的门牌号--它让数据能够准确找到往返的目标设备。没有 IP 地址，设备便无法在互联网上收发信息。</p>
+
+      <h2>IPv4 与 IPv6</h2>
+      <p>目前主要有两个版本的 IP 协议：</p>
+      <ul>
+        <li><strong>IPv4</strong>：32 位地址，形如 <code>192.0.2.1</code>，总共约 43 亿个。由于互联网爆发式增长，IPv4 地址已基本耗尽。</li>
+        <li><strong>IPv6</strong>：128 位地址，形如 <code>2001:db8::1</code>，数量近乎无限，旨在取代 IPv4。</li>
+      </ul>
+
+      <h2>IP 地址是如何分配的</h2>
+      <p>当你连接网络时，运营商（ISP）会为你的路由器分配一个公网 IP；路由器再通过 DHCP 为家中每台设备分配内网 IP。网站看到的是你的公网 IP，而内网 IP 不会出现在公网上。</p>
+
+      <h2>如何查看我的 IP</h2>
+      <p>访问 <a href="/">IP Lookup</a>，页面会自动显示你的公网 IPv4 与 IPv6 地址，无需任何操作。</p>
+    </div>
+
+    <div class="lang-en">
+      <h1>What is an IP Address?</h1>
+      <p>An IP address (Internet Protocol address) is a unique number assigned to every device on a network. It works like a postal address for data--letting information find the right device to and from. Without an IP address, a device cannot send or receive anything on the internet.</p>
+
+      <h2>IPv4 and IPv6</h2>
+      <p>Two versions of the IP protocol are in use today:</p>
+      <ul>
+        <li><strong>IPv4</strong>: 32-bit addresses like <code>192.0.2.1</code>, about 4.3 billion in total. IPv4 addresses have effectively run out due to the internet's explosive growth.</li>
+        <li><strong>IPv6</strong>: 128-bit addresses like <code>2001:db8::1</code>, virtually unlimited, designed to replace IPv4.</li>
+      </ul>
+
+      <h2>How IP Addresses Are Assigned</h2>
+      <p>When you connect, your Internet Service Provider (ISP) assigns a public IP to your router. The router then uses DHCP to give each of your devices a private IP. Websites see your public IP; private IPs never appear on the public internet.</p>
+
+      <h2>How to Find My IP</h2>
+      <p>Visit <a href="/">IP Lookup</a> and the page automatically shows your public IPv4 and IPv6 addresses--no action required.</p>
+    </div>
+
+    <div class="cta">
+      <a href="/"><span data-i18n="docs_cta">Test your IP and IPv6 connectivity now -></span></a>
+    </div>
+    <div class="back"><a href="/docs/">&larr; <span data-i18n="back_home">Back to IP Lookup</span></a></div>
+  </article>
+</div>
+</body>
+</html>

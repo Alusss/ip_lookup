@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="docs_index_title">Knowledge Base - IP Lookup</title>
+<meta name="description" content="Knowledge base: practical articles about IP addresses, IPv6, and network connectivity.">
+<link rel="canonical" href="https://ip.iohow.com/docs/">
+<link rel="stylesheet" href="/css/base.css">
+<style>
+.container{max-width:760px;margin:0 auto;padding:24px 24px 64px}
+header.page-head{margin-bottom:24px}
+header.page-head h1{font-size:32px;margin-bottom:8px}
+.intro{color:var(--text-secondary);font-size:15px;margin-bottom:24px}
+.kb-list{display:flex;flex-direction:column;gap:12px}
+.kb-item{display:block;padding:18px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);text-decoration:none;transition:border-color .2s,background .2s}
+.kb-item:hover{border-color:var(--accent);background:var(--bg-subtle);text-decoration:none}
+.kb-item h2{font-size:17px;color:var(--text);margin-bottom:4px}
+.kb-item p{font-size:14px;color:var(--text-secondary);line-height:1.5}
+.cta{margin-top:28px;padding:20px;text-align:center;background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius)}
+.cta a{display:inline-block;padding:10px 24px;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-weight:500}
+.cta a:hover{background:var(--accent-hover);text-decoration:none}
+.back{margin-top:32px}
+</style>
+<script src="/js/i18n.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a href="/" class="topbar-brand" aria-label="IP Lookup home">
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+      <rect x="3" y="3" width="42" height="42" rx="12" stroke="url(#lg)" stroke-width="2"/>
+      <path d="M24 24L11 13M24 24L37 13M24 24L11 35M24 24L37 35" stroke="url(#lg)" stroke-width="1.5" opacity="0.55"/>
+      <circle cx="24" cy="24" r="4.5" fill="url(#lg)"/>
+      <circle cx="11" cy="13" r="2.6" fill="url(#lg)"/><circle cx="37" cy="13" r="2.6" fill="url(#lg)"/>
+      <circle cx="11" cy="35" r="2.6" fill="url(#lg)"/><circle cx="37" cy="35" r="2.6" fill="url(#lg)"/>
+    </svg>
+    <span>IP Lookup</span>
+  </a>
+</header>
+<div class="container">
+  <header class="page-head">
+    <h1><span class="lang-zh">网络知识库</span><span class="lang-en">Knowledge Base</span></h1>
+    <p class="intro"><span data-i18n="docs_intro">Practical articles about IP addresses, IPv6, and network connectivity.</span></p>
+  </header>
+
+  <nav class="kb-list">
+    <a class="kb-item" href="/docs/what-is-ip-address">
+      <h2><span class="lang-zh">什么是 IP 地址？</span><span class="lang-en">What is an IP Address?</span></h2>
+      <p><span class="lang-zh">理解 IP 地址的作用、分类与基本结构。</span><span class="lang-en">Understand the role, types, and basic structure of IP addresses.</span></p>
+    </a>
+    <a class="kb-item" href="/docs/public-vs-private-ip">
+      <h2><span class="lang-zh">公网 IP 与内网 IP 的区别</span><span class="lang-en">Public vs Private IP</span></h2>
+      <p><span class="lang-zh">公网 IP 与内网 IP 有何不同，为什么你的路由器只分配内网地址。</span><span class="lang-en">How public and private IPs differ, and why your router hands you a private address.</span></p>
+    </a>
+    <a class="kb-item" href="/docs/what-is-ipv6">
+      <h2><span class="lang-zh">什么是 IPv6？</span><span class="lang-en">What is IPv6?</span></h2>
+      <p><span class="lang-zh">IPv6 是什么、为什么需要它，以及与 IPv4 的关键差异。</span><span class="lang-en">What IPv6 is, why it matters, and how it differs from IPv4.</span></p>
+    </a>
+    <a class="kb-item" href="/docs/ipv6-test-guide">
+      <h2><span class="lang-zh">IPv6 检测指南</span><span class="lang-en">IPv6 Test Guide</span></h2>
+      <p><span class="lang-zh">在 Windows、macOS、Linux 与移动端检测 IPv6 连通性的多种方法。</span><span class="lang-en">Multiple ways to test IPv6 connectivity on Windows, macOS, Linux, and mobile.</span></p>
+    </a>
+  </nav>
+
+  <div class="cta">
+    <a href="/"><span data-i18n="docs_cta">Test your IP and IPv6 connectivity now -></span></a>
+  </div>
+
+  <div class="back"><a href="/">&larr; <span data-i18n="back_home">Back to IP Lookup</span></a></div>
+</div>
+</body>
+</html>

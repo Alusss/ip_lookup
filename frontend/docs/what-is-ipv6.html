@@ -3,65 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>What is IPv6? A Simple Guide - IP Lookup</title>
+<title data-i18n="what_is_ipv6_title">What is IPv6? A Simple Guide - IP Lookup</title>
 <meta name="description" content="Learn what IPv6 is, why it matters, how it differs from IPv4, and how to test if your network supports it.">
 <link rel="canonical" href="https://ip.iohow.com/docs/what-is-ipv6">
 <link rel="stylesheet" href="/css/base.css">
 <style>
-.container{max-width:720px;margin:0 auto;padding:24px 24px 48px}
+.container{max-width:720px;margin:0 auto;padding:24px 24px 64px}
 article h1{font-size:30px;margin-bottom:16px}
 article h2{font-size:20px;margin-top:32px;margin-bottom:12px}
 article p,article li{font-size:15px;line-height:1.7;color:var(--text-secondary);margin-bottom:12px}
-article ul,article ol{padding-left:20px;margin-bottom:16px}
+article ul{padding-left:20px;margin-bottom:16px}
 article strong{color:var(--text)}
 .cta{background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;text-align:center;margin-top:32px}
 .cta p{color:var(--text)}
 .cta a{display:inline-block;margin-top:12px;padding:10px 24px;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-weight:500}
 .cta a:hover{background:var(--accent-hover);text-decoration:none}
-.back{margin-top:40px}
+.back{margin-top:32px}
 </style>
+<script src="/js/i18n.js"></script>
 </head>
 <body>
 <header class="topbar">
   <a href="/" class="topbar-brand" aria-label="IP Lookup home">
-    <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
-      <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="2"/>
-      <circle cx="18" cy="18" r="6" fill="currentColor"/>
-      <path d="M18 2v6M18 28v6M2 18h6M28 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+      <rect x="3" y="3" width="42" height="42" rx="12" stroke="url(#lg)" stroke-width="2"/>
+      <path d="M24 24L11 13M24 24L37 13M24 24L11 35M24 24L37 35" stroke="url(#lg)" stroke-width="1.5" opacity="0.55"/>
+      <circle cx="24" cy="24" r="4.5" fill="url(#lg)"/>
+      <circle cx="11" cy="13" r="2.6" fill="url(#lg)"/><circle cx="37" cy="13" r="2.6" fill="url(#lg)"/>
+      <circle cx="11" cy="35" r="2.6" fill="url(#lg)"/><circle cx="37" cy="35" r="2.6" fill="url(#lg)"/>
     </svg>
     <span>IP Lookup</span>
   </a>
 </header>
 <div class="container">
   <article>
-    <h1>What is IPv6?</h1>
+    <div class="lang-zh">
+      <h1>什么是 IPv6？</h1>
+      <p>IPv6（互联网协议第 6 版）是互联网协议的最新版本，旨在取代 IPv4。它由互联网工程任务组（IETF）于 1998 年制定，目的是解决 IPv4 地址耗尽的问题。</p>
 
-    <p>IPv6 (Internet Protocol version 6) is the most recent version of the Internet Protocol, designed to replace IPv4. It was created by the Internet Engineering Task Force (IETF) in 1998 to solve the problem of IPv4 address exhaustion.</p>
+      <h2>为什么需要 IPv6</h2>
+      <p>IPv4 使用 32 位地址，约可提供 43 亿个唯一地址。随着互联网、智能手机、物联网与云计算的爆发式增长，IPv4 地址已基本耗尽。IPv6 采用 128 位地址，约可提供 340 涵洞（3.4&times;10<sup>38</sup>）个地址，足以让地球上每台设备都拥有唯一 IP。</p>
 
-    <h2>Why Do We Need IPv6?</h2>
-    <p>IPv4 uses 32-bit addresses, providing approximately 4.3 billion unique addresses. With the explosive growth of the internet, smartphones, IoT devices, and cloud computing, IPv4 addresses have run out. IPv6 uses 128-bit addresses, providing approximately 340 undecillion (3.4&times;10<sup>38</sup>) addresses - enough for every device on earth to have its own unique IP.</p>
+      <h2>IPv4 与 IPv6 的关键差异</h2>
+      <ul>
+        <li><strong>地址长度</strong>：IPv4 为 32 位（如 192.0.2.1），IPv6 为 128 位（如 2001:db8::1）。</li>
+        <li><strong>安全性</strong>：IPv6 内置 IPsec，安全性更好。</li>
+        <li><strong>无 NAT</strong>：IPv6 恢复端到端直连，无需网络地址转换。</li>
+        <li><strong>头部更简</strong>：IPv6 数据包头部更高效，路由更快。</li>
+        <li><strong>自动配置</strong>：IPv6 支持无状态地址自动配置（SLAAC）。</li>
+      </ul>
 
-    <h2>Key Differences Between IPv4 and IPv6</h2>
-    <ul>
-      <li><strong>Address length</strong>: IPv4 is 32-bit (e.g., 192.0.2.1). IPv6 is 128-bit (e.g., 2001:db8::1).</li>
-      <li><strong>Security</strong>: IPv6 has IPsec built-in, offering better security.</li>
-      <li><strong>No NAT</strong>: IPv6 restores end-to-end connectivity without Network Address Translation.</li>
-      <li><strong>Simpler header</strong>: IPv6 has a more efficient packet header for faster routing.</li>
-      <li><strong>Auto-configuration</strong>: IPv6 supports stateless address autoconfiguration (SLAAC).</li>
-    </ul>
+      <h2>如何检查你是否拥有 IPv6</h2>
+      <p>访问 <a href="/">IP Lookup</a>，查看 IPv6 区域。如果你的网络支持 IPv6，页面会自动显示你的 IPv6 地址。</p>
 
-    <h2>How to Check if You Have IPv6</h2>
-    <p>Visit <a href="/">ip.iohow.com</a> and look for the IPv6 section. If your network supports IPv6, you will see your IPv6 address displayed automatically.</p>
-
-    <h2>IPv6 Adoption</h2>
-    <p>As of 2026, global IPv6 adoption exceeds 45%. Major countries like India, Germany, and the United States have over 50% IPv6 adoption rates. Mobile networks, especially 5G, are leading the transition with nearly 70% IPv6 traffic.</p>
-
-    <div class="cta">
-      <p>Check if your network supports IPv6 right now.</p>
-      <a href="/">Test Your IPv6 Connectivity &rarr;</a>
+      <h2>IPv6 普及率</h2>
+      <p>截至 2026 年，全球 IPv6 普及率已超过 45%。印度、德国、美国等国家的普及率超过 50%；移动网络尤其是 5G 领跑转型，IPv6 流量占比接近 70%。</p>
     </div>
 
-    <div class="back"><a href="/">&larr; Back to IP Lookup</a></div>
+    <div class="lang-en">
+      <h1>What is IPv6?</h1>
+      <p>IPv6 (Internet Protocol version 6) is the most recent version of the Internet Protocol, designed to replace IPv4. It was created by the Internet Engineering Task Force (IETF) in 1998 to solve the problem of IPv4 address exhaustion.</p>
+
+      <h2>Why Do We Need IPv6?</h2>
+      <p>IPv4 uses 32-bit addresses, providing approximately 4.3 billion unique addresses. With the explosive growth of the internet, smartphones, IoT devices, and cloud computing, IPv4 addresses have run out. IPv6 uses 128-bit addresses, providing approximately 340 undecillion (3.4&times;10<sup>38</sup>) addresses - enough for every device on earth to have its own unique IP.</p>
+
+      <h2>Key Differences Between IPv4 and IPv6</h2>
+      <ul>
+        <li><strong>Address length</strong>: IPv4 is 32-bit (e.g., 192.0.2.1). IPv6 is 128-bit (e.g., 2001:db8::1).</li>
+        <li><strong>Security</strong>: IPv6 has IPsec built-in, offering better security.</li>
+        <li><strong>No NAT</strong>: IPv6 restores end-to-end connectivity without Network Address Translation.</li>
+        <li><strong>Simpler header</strong>: IPv6 has a more efficient packet header for faster routing.</li>
+        <li><strong>Auto-configuration</strong>: IPv6 supports stateless address autoconfiguration (SLAAC).</li>
+      </ul>
+
+      <h2>How to Check if You Have IPv6</h2>
+      <p>Visit <a href="/">IP Lookup</a> and look for the IPv6 section. If your network supports IPv6, you will see your IPv6 address displayed automatically.</p>
+
+      <h2>IPv6 Adoption</h2>
+      <p>As of 2026, global IPv6 adoption exceeds 45%. Major countries like India, Germany, and the United States have over 50% IPv6 adoption rates. Mobile networks, especially 5G, are leading the transition with nearly 70% IPv6 traffic.</p>
+    </div>
+
+    <div class="cta">
+      <p><span class="lang-zh">立即检测你的网络是否支持 IPv6。</span><span class="lang-en">Check if your network supports IPv6 right now.</span></p>
+      <a href="/"><span class="lang-zh">检测 IPv6 连通性 &rarr;</span><span class="lang-en">Test Your IPv6 Connectivity &rarr;</span></a>
+    </div>
+    <div class="back"><a href="/docs/">&larr; <span data-i18n="back_home">Back to IP Lookup</span></a></div>
   </article>
 </div>
 </body>

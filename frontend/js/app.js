@@ -13,25 +13,32 @@
   var geoLine = document.getElementById('geo-line');
   var copyBtn = document.getElementById('copy-btn');
   var refreshBtn = document.getElementById('refresh-btn');
+  var ipv4Card = document.getElementById('ipv4-card');
+
   var ipv6Address = document.getElementById('ipv6-address');
   var ipv6Status = document.getElementById('ipv6-status');
-  var ipv4Card = document.getElementById('ipv4-card');
+  var ipv6CopyBtn = document.getElementById('ipv6-copy-btn');
+  var ipv6RefreshBtn = document.getElementById('ipv6-refresh-btn');
   var ipv6Card = document.getElementById('ipv6-card');
+
   var adBar = document.getElementById('ad-bar');
   var adLink = document.getElementById('ad-link');
   var closeAd = document.getElementById('close-ad');
-  var yearSpan = document.getElementById('year');
+
   var copyBtnText = copyBtn && copyBtn.querySelector('span');
   var refreshBtnText = refreshBtn && refreshBtn.querySelector('.btn-text');
   var refreshSpinner = refreshBtn && refreshBtn.querySelector('.spinner');
+  var ipv6CopyBtnText = ipv6CopyBtn && ipv6CopyBtn.querySelector('span');
+  var ipv6RefreshBtnText = ipv6RefreshBtn && ipv6RefreshBtn.querySelector('.btn-text');
+  var ipv6RefreshSpinner = ipv6RefreshBtn && ipv6RefreshBtn.querySelector('.spinner');
 
   var ipState = 'idle';
   var lastIp = '';
   var lastFetchTime = 0;
   var ipv6State = 'idle';
+  var lastIpv6 = '';
+  var lastIpv6FetchTime = 0;
   var geoFetched = false;
-
-  if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
   function handleAdBar() {
     if (sessionStorage.getItem(AD_SESSION_KEY)) {
@@ -43,10 +50,19 @@
     });
   }
 
+  // HTTP headers are decoded as ISO-8859-1 by the Fetch API, so non-ASCII
+  // (e.g. Chinese ad text sent as raw UTF-8 bytes) arrives as mojibake.
+  // Re-decode Latin-1 chars back to UTF-8; no-op for already-correct strings.
+  function decodeHeaderText(s) {
+    if (!s) return s;
+    try { return decodeURIComponent(escape(s)); }
+    catch (e) { return s; }
+  }
+
   function handleAdHeaders(headers) {
     var enabled = headers.get('X-Ad-Enabled');
     if (enabled === 'true') {
-      var text = headers.get('X-Ad-Text');
+      var text = decodeHeaderText(headers.get('X-Ad-Text'));
       var url = headers.get('X-Ad-URL');
       if (text && url && /^https?:\/\//i.test(url)) {
         adLink.textContent = text;
@@ -153,6 +169,13 @@
       });
   }
 
+  function setIpv6Buttons(copyEnabled, refreshEnabled, refreshLoading) {
+    if (ipv6CopyBtn) ipv6CopyBtn.disabled = !copyEnabled;
+    if (ipv6RefreshBtn) ipv6RefreshBtn.disabled = !refreshEnabled;
+    if (ipv6RefreshBtnText) ipv6RefreshBtnText.textContent = t(refreshLoading ? 'refreshing' : 'refresh');
+    if (ipv6RefreshSpinner) ipv6RefreshSpinner.style.display = refreshLoading ? 'inline-block' : 'none';
+  }
+
   function setIpv6State(state, ip) {
     ipv6State = state;
     ipv6Status.className = 'status-msg';
@@ -161,11 +184,11 @@
     if (state === 'loading') {
       ipv6Address.textContent = t('ipv6_testing');
       ipv6Address.className = 'ip-address loading';
+      setIpv6Buttons(false, false, true);
     } else if (state === 'success') {
       ipv6Address.textContent = ip;
       ipv6Address.className = 'ip-address';
-      ipv6Status.className = 'status-msg success';
-      ipv6Status.textContent = t('ipv6_supported');
+      setIpv6Buttons(true, true, false);
       ipv6Card.classList.remove('loading');
       ipv6Card.classList.add('tested');
     } else if (state === 'fail') {
@@ -173,6 +196,7 @@
       ipv6Address.className = 'ip-address loading';
       ipv6Status.className = 'status-msg error';
       ipv6Status.textContent = t('ipv6_not_supported');
+      setIpv6Buttons(false, false, false);
       ipv6Card.classList.remove('loading');
       ipv6Card.classList.add('tested');
     }
@@ -184,10 +208,12 @@
     var controller = newAbortController();
     var timeoutId = setTimeout(function () {
       controller.abort();
+      lastIpv6FetchTime = Date.now();
       setIpv6State('fail');
     }, FETCH_TIMEOUT_IP6);
 
     setIpv6State('loading');
+    ipv6Card.classList.add('loading');
 
     fetch(IP6_API, { headers: { 'X-Client': 'web' }, signal: controller.signal })
       .then(function (response) {
@@ -198,12 +224,29 @@
       .then(function (text) {
         var ip = text.trim();
         if (!ip) throw new Error('Empty response');
+        lastIpv6 = ip;
+        lastIpv6FetchTime = Date.now();
         setIpv6State('success', ip);
       })
       .catch(function () {
         clearTimeout(timeoutId);
+        lastIpv6FetchTime = Date.now();
         setIpv6State('fail');
       });
+  }
+
+  function handleIpv6Refresh() {
+    if (ipv6State === 'loading') return;
+    var now = Date.now();
+    if (now - lastIpv6FetchTime < THROTTLE_MS && lastIpv6) {
+      ipv6Status.className = 'status-msg error';
+      ipv6Status.textContent = t('throttled');
+      setTimeout(function () {
+        if (ipv6State === 'success') ipv6Status.className = 'status-msg';
+      }, 2500);
+      return;
+    }
+    fetchIpv6();
   }
 
   function newAbortController() {
@@ -222,30 +265,29 @@
     fetchIp();
   }
 
-  function handleCopy() {
-    if (!lastIp) return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(lastIp).then(showCopySuccess).catch(function () { fallbackCopy(lastIp); });
-    } else {
-      fallbackCopy(lastIp);
-    }
+  function showCopied(btnTextEl) {
+    if (!btnTextEl) return;
+    btnTextEl.textContent = t('copy_success');
+    setTimeout(function () { btnTextEl.textContent = t('copy'); }, 1500);
   }
 
-  function fallbackCopy(text) {
+  function fallbackCopy(text, btnTextEl) {
     var ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); showCopySuccess(); } catch (e) {}
+    try { document.execCommand('copy'); showCopied(btnTextEl); } catch (e) {}
     document.body.removeChild(ta);
   }
 
-  function showCopySuccess() {
-    if (copyBtnText) {
-      copyBtnText.textContent = t('copy_success');
-      setTimeout(function () { copyBtnText.textContent = t('copy'); }, 1500);
+  function copyText(text, btnTextEl) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { showCopied(btnTextEl); }).catch(function () { fallbackCopy(text, btnTextEl); });
+    } else {
+      fallbackCopy(text, btnTextEl);
     }
   }
 
@@ -253,8 +295,10 @@
     if (!lastIp) fetchIp();
   }
 
-  if (copyBtn) copyBtn.addEventListener('click', handleCopy);
+  if (copyBtn) copyBtn.addEventListener('click', function () { copyText(lastIp, copyBtnText); });
   if (refreshBtn) refreshBtn.addEventListener('click', handleRefresh);
+  if (ipv6CopyBtn) ipv6CopyBtn.addEventListener('click', function () { copyText(lastIpv6, ipv6CopyBtnText); });
+  if (ipv6RefreshBtn) ipv6RefreshBtn.addEventListener('click', handleIpv6Refresh);
   window.addEventListener('online', handleOnline);
 
   handleAdBar();
