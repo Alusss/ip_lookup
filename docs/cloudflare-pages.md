@@ -160,4 +160,66 @@ Content-Security-Policy: default-src 'self'; connect-src 'self' https://ip4.ioho
 
 ---
 
+---
+
+## 待处理：后续加固项
+
+以下三项经评估当前暂不执行，记录在此供后续参考。
+
+### 1. 源站防火墙 — nftables Cloudflare IP 白名单
+
+**目的**：防止绕过 CDN 直接访问源站 Go 后端。
+
+已有文件：
+- `deploy/nftables/cloudflare-only.nft` — nftables 规则集
+- `deploy/scripts/update-cloudflare-ip.sh` — 同步 Cloudflare IP 列表
+- `deploy/scripts/install-cf-sync-cron.sh` — 安装定时任务
+
+```bash
+# 部署
+cp deploy/nftables/cloudflare-only.nft /etc/nftables/
+nft -f /etc/nftables/cloudflare-only.nft
+
+# 自动同步（推荐 systemd timer）
+sudo bash deploy/scripts/install-cf-sync-cron.sh timer
+```
+
+### 2. Pages Protected Branches
+
+**目的**：防止非 `main` 分支的代码意外发布到生产域名。
+
+操作路径：Cloudflare Dashboard → Pages → `ip-lookup` → **Settings** → **Build configuration** → **Branches**：
+
+| 配置项 | 值 |
+|---|---|
+| Production branch | `main` |
+| Preview branches | `*` |
+
+效果：
+- `main` → 部署到 `ip.iohow.com`
+- 其他分支 → 仅生成 `https://<branch>.ip-lookup.pages.dev` 预览 URL
+
+### 3. Pages Functions 路由保险（防御纵深）
+
+**目的**：在 Pages 层显式拒绝非前端路径，防止配置失误导致暴露。
+
+创建 `functions/_routes.json`：
+
+```json
+{
+  "version": 1,
+  "include": ["/"],
+  "exclude": [
+    "/api/*", "/backend/*", "/deploy/*",
+    "/docker/*", "/scripts/*", "/docs/*",
+    "/.git/*", "/.github/*",
+    "/Makefile", "/config.yaml"
+  ]
+}
+```
+
+> 当前核心安全边界由 `publish directory = frontend` 保障，此措施为非必需的 defense-in-depth。
+
+---
+
 > 参见：[部署总览](deployment.md)、[安全策略](security.md)
