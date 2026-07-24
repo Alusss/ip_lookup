@@ -40,7 +40,8 @@
   var lastIpv6 = '';
   var lastIpv6FetchTime = 0;
   var geoFetched = false;
-  var geo6Fetched = false;
+  var ipv4GeoData = null;
+  var ipv6ReadyForGeo = false;
 
   function handleAdBar() {
     if (sessionStorage.getItem(AD_SESSION_KEY)) {
@@ -146,24 +147,22 @@
     return line;
   }
 
+  function fillGeo(el, data) {
+    if (!el || !data) return;
+    var g = formatGeo(data);
+    el.textContent = g;
+    el.title = g;
+  }
+
   function fetchGeo(ip) {
     if (geoFetched || !ip) return;
     geoFetched = true;
     fetch(IP4_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
       .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
       .then(function (data) {
-        if (data && geoLine) { var g = formatGeo(data); geoLine.textContent = g; geoLine.title = g; }
-      })
-      .catch(function () { /* geo is non-critical, fail silently */ });
-  }
-
-  function fetchGeo6(ip) {
-    if (geo6Fetched || !ip) return;
-    geo6Fetched = true;
-    fetch(IP6_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
-      .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
-      .then(function (data) {
-        if (data && ipv6GeoLine) { var g = formatGeo(data); ipv6GeoLine.textContent = g; ipv6GeoLine.title = g; }
+        ipv4GeoData = data;
+        fillGeo(geoLine, data);
+        if (ipv6ReadyForGeo) fillGeo(ipv6GeoLine, data);
       })
       .catch(function () { /* geo is non-critical, fail silently */ });
   }
@@ -258,7 +257,8 @@
         lastIpv6 = ip;
         lastIpv6FetchTime = Date.now();
         setIpv6State('success', ip);
-        fetchGeo6(ip);
+        ipv6ReadyForGeo = true;
+        if (ipv4GeoData) fillGeo(ipv6GeoLine, ipv4GeoData);
       })
       .catch(function () {
         clearTimeout(timeoutId);
