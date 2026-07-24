@@ -83,9 +83,9 @@ for f in \
 	deploy/scripts/update-geoip.sh \
 	deploy/nftables/cloudflare-only.nft \
 	api/openapi.yaml \
-	_headers \
-	_redirects \
-	robots.txt \
+	frontend/_headers \
+	frontend/_redirects \
+	frontend/robots.txt \
 	docs/operation.md \
 	docs/architecture.md \
 	docs/future-plan.md \

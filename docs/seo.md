@@ -39,7 +39,7 @@
 
 ### 机器人文件
 
-- `robots.txt`（Allow 全站，Disallow `/health` `/readyz` `/metrics` `/ad-config`）
+- `frontend/robots.txt`（Allow 全站，Disallow `/health` `/readyz` `/metrics` `/ad-config`）
 - `sitemap.xml`（含 alternate hreflang）
 
 ### 性能目标（Core Web Vitals）

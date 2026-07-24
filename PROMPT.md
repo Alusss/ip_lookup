@@ -84,7 +84,7 @@ flowchart LR
 ### 5.1 技术选型
 
 - 原生 HTML + CSS + JS（ES2020+），**不引入框架**；如需构建则用 Vite 仅做压缩与 hash。
-- 构建产物托管 Cloudflare Pages，根目录放 `_headers` 与 `_redirects`。
+- 构建产物托管 Cloudflare Pages，`frontend/` 目录下放 `_headers` 与 `_redirects`。
 
 ### 5.2 页面结构（自上而下）
 
@@ -155,7 +155,7 @@ stateDiagram-v2
 
 - Lighthouse：Performance ≥ 95，Accessibility ≥ 95，SEO ≥ 95，Best Practices ≥ 95。
 - 关键 CSS 内联，JS `defer`，字体使用系统栈，首屏无外部阻塞请求。
-- 仓库根目录 `_headers` 配置静态资源 `Cache-Control: public, max-age=31536000, immutable`，HTML `no-cache`。
+- `frontend/_headers` 配置静态资源 `Cache-Control: public, max-age=31536000, immutable`，HTML `no-cache`。
 - 隐私优先的统计埋点：优先使用 Cloudflare Web Analytics（无 Cookie）。禁止 GA4 等传统统计工具。
 - 无障碍：复制/刷新按钮须带 `aria-label`；状态变化须用 `aria-live="polite"` 播报；UI 色彩对比度达到 WCAG AA 级。
 - PWA（可选）：可增加 `manifest.webmanifest` + Service Worker，但 IP 数据始终实时请求，禁止缓存动态 IP。
@@ -342,7 +342,7 @@ flowchart LR
 - `canonical`、`hreflang`（zh-CN / en）。
 - Schema.org：`WebSite` + `applicationCategory: UtilitiesApplication`。
 - OpenGraph + Twitter Card。
-- `sitemap.xml`、`robots.txt`（Allow 全站，Disallow `/health` `/readyz` `/metrics` `/ad-config`）。
+- `sitemap.xml`、`frontend/robots.txt`（Allow 全站，Disallow `/health` `/readyz` `/metrics` `/ad-config`）。
 - Core Web Vitals：LCP < 1.2s，CLS < 0.1，INP < 200ms。
 
 ### 8.2 内容矩阵
@@ -426,7 +426,7 @@ flowchart TD
 
 ### Phase 7：SEO 与文档 ✅
 
-- 交付物：`docs/product.md`、`docs/architecture.md`、`docs/development.md`、`docs/deployment.md`、`docs/operation.md`、`docs/security.md`、`docs/release.md`、`docs/privacy.md`、`docs/seo.md`、`frontend/sitemap.xml`、`robots.txt`
+- 交付物：`docs/product.md`、`docs/architecture.md`、`docs/development.md`、`docs/deployment.md`、`docs/operation.md`、`docs/security.md`、`docs/release.md`、`docs/privacy.md`、`docs/seo.md`、`frontend/sitemap.xml`、`frontend/robots.txt`
 
 ### Phase 8：生产级 Review ✅
 

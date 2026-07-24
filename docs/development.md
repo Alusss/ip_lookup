@@ -89,9 +89,10 @@ ip-lookup/
 ├── scripts/            # 工具脚本
 │   ├── install-systemd.sh
 │   └── verify.sh
-├── _headers            # Cloudflare Pages 头配置
-├── _redirects          # Cloudflare Pages 重定向
-├── robots.txt          # SEO
+├── frontend/         # Cloudflare Pages 静态前端
+│   ├── _headers         # Cloudflare Pages 头配置
+│   ├── _redirects       # Cloudflare Pages 重定向
+│   ├── robots.txt       # SEO
 └── Makefile
 ```
 

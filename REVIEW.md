@@ -72,8 +72,8 @@
 - [x] deploy/scripts/install-cf-sync-cron.sh
 - [x] deploy/nftables/cloudflare-only.nft
 - [x] api/openapi.yaml
-- [x] _headers
-- [x] _redirects
+- [x] frontend/_headers
+- [x] frontend/_redirects
 - [x] frontend/robots.txt
 - [x] frontend/sitemap.xml
 - [x] VARIABLES.md
