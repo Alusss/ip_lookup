@@ -94,7 +94,7 @@ geoip_asn_db_path: /var/lib/ip-lookup/GeoLite2-ASN.mmdb # ASN 库路径（可选
 # -----------------------------------------------------------------------------
 # 监控 / 自检（指标自带的告警 webhook）
 # -----------------------------------------------------------------------------
-metrics_listen_addr: 127.0.0.1:9090  # Prometheus 指标暴露地址（仅本地）
+metrics_listen_addr: 127.0.0.1:20013  # Prometheus 指标暴露地址（仅本地）
 
 monitoring:
   enabled: true                       # 是否启用自检告警

@@ -30,7 +30,7 @@ CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o ip-lookup .
 ### 安装
 
 ```bash
-sudo bash scripts/install-systemd.sh ./backend/ip-lookup
+cd ../ && sudo bash scripts/install-systemd.sh ./backend/ip-lookup
 ```
 
 该脚本自动执行：
