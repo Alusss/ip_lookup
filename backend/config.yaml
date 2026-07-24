@@ -57,7 +57,7 @@ log_ip_masking: true         # 日志中 IP 脱敏（生产建议 true）
 # -----------------------------------------------------------------------------
 cors_enabled: true           # 是否发送 CORS 头（跨域调用建议 true）
 json_api_enabled: true       # / 路由是否接受 Accept: application/json 返回 JSON
-all_api_enabled: false       # /all 路由开关：开则返回 IP+地点+ASN 的 JSON；关则等同 /
+all_api_enabled: true       # /all 路由开关：开则返回 IP+地点+ASN 的 JSON；关则等同 /
 
 # -----------------------------------------------------------------------------
 # HTTP 服务器参数
