@@ -5,7 +5,7 @@
 ### Added
 
 - **JSON 广告字段**：`api_ad_enabled=true` 时，`/` JSON（`Accept: application/json`）与 `/all` JSON 响应均附带 `ad` 对象（`{text,url}`，按 `Accept-Language` 本地化）；开关关闭或文案为空时字段缺省。复用现有 `api_ad_text_*`/`api_ad_url_*` 配置，无需新增字段
-- **GeoIP 显示格式区分中英文**：中文页面显示「国家名 城市名 · ASN」，英文页面保持「City, Country · ASN」
+- **GeoIP 显示格式区分中英文**：中文页面显示「国家名·城市名 | ASN」，英文页面显示「City, Country | ASN」
 - **geo-line 移动端溢出处理**：长 ASN 文本单行截断显示省略号，`title` 属性提供完整内容悬停查看
 - `openapi.yaml` 升至 v1.3.0（`/` 与 `/all` JSON 响应新增 `ad` 属性）
 

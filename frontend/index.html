@@ -31,10 +31,11 @@
 <link rel="stylesheet" href="/css/base.css">
 <style>
 .container{width:100%;max-width:640px;margin:0 auto;padding:20px 20px 24px;min-height:100vh}
-.ad-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 20px;margin:0 auto 20px;max-width:640px;display:flex;align-items:center;justify-content:space-between;font-size:14px;gap:12px}
+.ad-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 20px;margin:0 auto 20px;max-width:640px;display:flex;align-items:center;justify-content:center;font-size:14px;position:relative}
 .ad-bar a{color:var(--accent)}
 .ad-bar a:hover{text-decoration:underline}
-.ad-bar .close-ad{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.ad-bar .ad-badge{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:600;color:var(--text-muted);background:var(--bg-subtle);padding:1px 5px;border-radius:3px;letter-spacing:.5px;pointer-events:none}
+.ad-bar .close-ad{background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;flex-shrink:0;position:absolute;right:12px;top:50%;transform:translateY(-50%)}
 .ad-bar .close-ad:hover{color:var(--text);background:var(--border)}
 .ad-bar.hidden{display:none}
 header{text-align:center;margin-bottom:28px}
@@ -81,6 +82,7 @@ footer{margin-top:24px;padding:0 0 16px;text-align:center;color:var(--text-secon
 </head>
 <body>
 <div id="ad-bar" class="ad-bar hidden" role="complementary" aria-label="Advertisement">
+  <span class="ad-badge">AD</span>
   <a id="ad-link" href="" target="_blank" rel="noopener sponsored"></a>
   <button class="close-ad" id="close-ad" aria-label="Close advertisement">&times;</button>
 </div>

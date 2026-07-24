@@ -140,9 +140,9 @@
       if (data.city) parts.push(data.city);
       if (data.country) parts.push(data.country);
     }
-    var sep = isZh ? ' ' : ', ';
+    var sep = isZh ? '\u00b7' : ', ';
     var line = parts.join(sep);
-    if (data.asn) line = line ? line + ' \u00b7 ' + data.asn : data.asn;
+    if (data.asn) line = line ? line + ' | ' + data.asn : data.asn;
     return line;
   }
 
