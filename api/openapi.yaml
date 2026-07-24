@@ -6,7 +6,7 @@ info:
     - `ip4.iohow.com`（仅 A 记录）与 `ip6.iohow.com`（仅 AAAA 记录）均走 `GET /`。
     - 前端 fetch 需携带 `X-Client: web` 头以获取纯 IP 响应。
     - 携带 `Accept: application/json` 头可获取 JSON 格式响应（含地理位置信息，若已启用 GeoIP）。
-  version: "1.2.0"
+  version: "1.3.0"
 servers:
   - url: https://ip4.iohow.com
     description: IPv4 API
@@ -18,9 +18,9 @@ paths:
       summary: 获取客户端 IP 地址
       description: >
         根据请求头返回不同格式：
-        - `X-Client: web` → 总是返回纯 IP
-        - `Accept: application/json` → 返回 JSON 格式
-        - 其他 → 根据广告开关返回纯 IP 或带广告的文本
+        - `X-Client: web` -> 总是返回纯 IP
+        - `Accept: application/json` -> 返回 JSON 格式（api_ad_enabled=true 时附带 ad 字段）
+        - 其他 -> 根据广告开关返回纯 IP 或带广告的文本
       parameters:
         - name: X-Client
           in: header
@@ -61,6 +61,15 @@ paths:
                   asn:
                     type: string
                     description: ASN 编号与组织名（需启用 GeoIP 并配置 ASN 库），如 "AS12345 Example Org"
+                  ad:
+                    type: object
+                    nullable: true
+                    description: 广告信息（仅当 api_ad_enabled=true 且广告文案非空时出现）
+                    properties:
+                      text:
+                        type: string
+                      url:
+                        type: string
               example:
                 ip: "203.0.113.42"
                 version: "IPv4"
@@ -68,6 +77,9 @@ paths:
                 country: "United States"
                 isp: "Example ISP"
                 asn: "AS12345 Example Org"
+                ad:
+                  text: "Recommended VPN service for privacy"
+                  url: "https://example.com/en/vpn"
         "400":
           description: 请求不合法
         "403":
@@ -88,13 +100,14 @@ paths:
       description: >
         需启用 `all_api_enabled`。开启时始终返回 JSON（含 city/country/isp/asn，
         受 GeoIP 配置与 Accept-Language 影响）；关闭时行为与 `GET /` 完全一致。
+        当 `api_ad_enabled=true` 时，响应附带 `ad` 对象（含本地化广告文案与链接）。
       parameters:
         - name: Accept-Language
           in: header
           required: false
           schema:
             type: string
-          description: 简体中文（zh-CN/zh-Hans/zh-SG）返回中文地名，其余返回英文
+          description: 简体中文（zh-CN/zh-Hans/zh-SG）返回中文地名与广告文案，其余返回英文
       responses:
         "200":
           description: 成功
@@ -116,6 +129,15 @@ paths:
                     type: string
                   asn:
                     type: string
+                  ad:
+                    type: object
+                    nullable: true
+                    description: 广告信息（仅当 api_ad_enabled=true 且广告文案非空时出现）
+                    properties:
+                      text:
+                        type: string
+                      url:
+                        type: string
               example:
                 ip: "203.0.113.42"
                 version: "IPv4"
@@ -123,6 +145,9 @@ paths:
                 country: "United States"
                 isp: "Example ISP"
                 asn: "AS12345 Example Org"
+                ad:
+                  text: "Recommended VPN service for privacy"
+                  url: "https://example.com/en/vpn"
         "403":
           description: 已启用 cf_only 且请求来源非 Cloudflare/受信代理
         "429":

@@ -154,6 +154,39 @@ func TestJSONAPI(t *testing.T) {
 	}
 }
 
+func TestRootJSONWithAd(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.JsonApiEnabled = true
+	cfg.ApiAdEnabled = true
+	extractor := NewIPExtractor("/dev/null", 0)
+	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
+	global := NewGlobalRateLimiter(1000, 1000)
+	metrics := NewMetrics()
+	ready.Store(true)
+
+	handler := rootHandler(cfg, extractor, perIP, global, metrics, nil)
+
+	req := httptest.NewRequest("GET", "/", nil)
+	req.RemoteAddr = "203.0.113.42:12345"
+	req.Header.Set("Accept", "application/json")
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var resp ipResponse
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("failed to decode JSON: %v", err)
+	}
+	if resp.Ad == nil {
+		t.Fatal("expected ad field in / JSON response, got nil")
+	}
+	if resp.Ad.Text == "" {
+		t.Error("expected non-empty ad text")
+	}
+}
+
 func TestAdConfigHandler(t *testing.T) {
 	cfg := DefaultConfig()
 	cfg.WebAdEnabled = true
@@ -181,6 +214,66 @@ func TestAdConfigHandler(t *testing.T) {
 	if resp.Web.Text != "测试广告" {
 		t.Errorf("expected 测试广告, got %s", resp.Web.Text)
 	}
+}
+
+func TestAllHandlerAd(t *testing.T) {
+	extractor := NewIPExtractor("/dev/null", 0)
+	perIP := NewPerIPRateLimiter(100, 10, time.Minute)
+	global := NewGlobalRateLimiter(1000, 1000)
+	metrics := NewMetrics()
+	ready.Store(true)
+
+	t.Run("ad enabled", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.AllApiEnabled = true
+		cfg.ApiAdEnabled = true
+		handler := allHandler(cfg, extractor, perIP, global, metrics, nil)
+
+		req := httptest.NewRequest("GET", "/all", nil)
+		req.RemoteAddr = "203.0.113.42:12345"
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d", w.Code)
+		}
+		var resp ipResponse
+		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+			t.Fatalf("failed to decode JSON: %v", err)
+		}
+		if resp.Ad == nil {
+			t.Fatal("expected ad field in /all response, got nil")
+		}
+		if resp.Ad.Text == "" {
+			t.Error("expected non-empty ad text")
+		}
+		if resp.Ad.URL == "" {
+			t.Error("expected non-empty ad url")
+		}
+	})
+
+	t.Run("ad disabled", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.AllApiEnabled = true
+		cfg.ApiAdEnabled = false
+		handler := allHandler(cfg, extractor, perIP, global, metrics, nil)
+
+		req := httptest.NewRequest("GET", "/all", nil)
+		req.RemoteAddr = "203.0.113.42:12345"
+		w := httptest.NewRecorder()
+		handler(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Fatalf("expected 200, got %d", w.Code)
+		}
+		var resp ipResponse
+		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+			t.Fatalf("failed to decode JSON: %v", err)
+		}
+		if resp.Ad != nil {
+			t.Errorf("expected no ad field when api_ad_enabled=false, got %+v", resp.Ad)
+		}
+	})
 }
 
 func TestRateLimiter(t *testing.T) {

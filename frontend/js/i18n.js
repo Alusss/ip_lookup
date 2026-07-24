@@ -129,6 +129,8 @@
       var text = t(key);
       if (el.tagName === 'META') {
         el.setAttribute('content', text);
+      } else if (el.tagName === 'TITLE') {
+        document.title = text;
       } else {
         el.textContent = text;
       }
@@ -151,6 +153,7 @@
         filingDiv.classList.remove('hidden');
         if (SITE_CONFIG.gongan) {
           var sG = document.createElement('span');
+          sG.className = 'gongan-badge';
           var img = document.createElement('img');
           img.src = 'img/gonganbeian.png';
           img.alt = '';

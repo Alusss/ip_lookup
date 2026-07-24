@@ -8,12 +8,13 @@ import (
 )
 
 type ipResponse struct {
-	IP      string `json:"ip"`
-	Version string `json:"version,omitempty"`
-	City    string `json:"city,omitempty"`
-	Country string `json:"country,omitempty"`
-	ISP     string `json:"isp,omitempty"`
-	ASN     string `json:"asn,omitempty"`
+	IP      string    `json:"ip"`
+	Version string    `json:"version,omitempty"`
+	City    string    `json:"city,omitempty"`
+	Country string    `json:"country,omitempty"`
+	ISP     string    `json:"isp,omitempty"`
+	ASN     string    `json:"asn,omitempty"`
+	Ad      *adConfig `json:"ad,omitempty"`
 }
 
 type webAdConfig struct {
@@ -240,7 +241,8 @@ func applyRateLimit(cfg *Config, perIPLimiter *PerIPRateLimiter, globalLimiter *
 }
 
 // buildGeoResponse assembles an ipResponse, attaching localized GeoIP fields
-// (city/country/isp/asn) when a GeoIP reader is configured.
+// (city/country/isp/asn) when a GeoIP reader is configured, and the API ad
+// (ad.text/ad.url) when api_ad_enabled is on.
 func buildGeoResponse(cfg *Config, geo *GeoIP, ipStr string, r *http.Request) ipResponse {
 	resp := ipResponse{
 		IP:      ipStr,
@@ -254,6 +256,9 @@ func buildGeoResponse(cfg *Config, geo *GeoIP, ipStr string, r *http.Request) ip
 			resp.ISP = loc.ISP
 			resp.ASN = loc.ASN
 		}
+	}
+	if text, url := cfg.GetApiAdText(r); text != "" {
+		resp.Ad = &adConfig{Text: text, URL: url}
 	}
 	return resp
 }

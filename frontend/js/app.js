@@ -131,10 +131,17 @@
 
   function formatGeo(data) {
     if (!data) return '';
+    var isZh = window.getLang && window.getLang() === 'zh';
     var parts = [];
-    if (data.city) parts.push(data.city);
-    if (data.country) parts.push(data.country);
-    var line = parts.join(', ');
+    if (isZh) {
+      if (data.country) parts.push(data.country);
+      if (data.city) parts.push(data.city);
+    } else {
+      if (data.city) parts.push(data.city);
+      if (data.country) parts.push(data.country);
+    }
+    var sep = isZh ? ' ' : ', ';
+    var line = parts.join(sep);
     if (data.asn) line = line ? line + ' \u00b7 ' + data.asn : data.asn;
     return line;
   }
@@ -145,7 +152,7 @@
     fetch(IP4_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
       .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
       .then(function (data) {
-        if (data && geoLine) geoLine.textContent = formatGeo(data);
+        if (data && geoLine) { var g = formatGeo(data); geoLine.textContent = g; geoLine.title = g; }
       })
       .catch(function () { /* geo is non-critical, fail silently */ });
   }
@@ -156,7 +163,7 @@
     fetch(IP6_API, { headers: { 'Accept': 'application/json', 'X-Client': 'web' } })
       .then(function (response) { if (!response.ok) throw new Error('HTTP'); return response.json(); })
       .then(function (data) {
-        if (data && ipv6GeoLine) ipv6GeoLine.textContent = formatGeo(data);
+        if (data && ipv6GeoLine) { var g = formatGeo(data); ipv6GeoLine.textContent = g; ipv6GeoLine.title = g; }
       })
       .catch(function () { /* geo is non-critical, fail silently */ });
   }

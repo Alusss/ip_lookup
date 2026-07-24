@@ -91,7 +91,7 @@
 ```
 curl ip4.iohow.com/   → "203.0.113.42" (纯文本)
 curl -H "Accept: application/json" ip4.iohow.com/   → {"ip":"...","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}
-curl ip4.iohow.com/all   → 同上 JSON（需 all_api_enabled=true；关闭时等同 /）
+curl ip4.iohow.com/all   → 同上 JSON（需 all_api_enabled=true；关闭时等同 /；api_ad_enabled=true 时附带 ad 字段）
 ```
 
 ### 2. 功能需求
@@ -418,8 +418,8 @@ type PerIPRateLimiter struct {
 
 | 请求特征 | 返回格式 | 内容 |
 |----------|----------|------|
-| `Accept: application/json` + `JsonApiEnabled=true` | JSON | `{"ip":"...","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}` |
-| `GET /all` + `AllApiEnabled=true` | JSON | 同上（始终 JSON，含 GeoIP+ASN） |
+| `Accept: application/json` + `JsonApiEnabled=true` | JSON | `{"ip":"...","version":"IPv4","city":"...","country":"...","isp":"...","asn":"..."}`；`ApiAdEnabled=true` 时附带 `ad` 字段 |
+| `GET /all` + `AllApiEnabled=true` | JSON | 同上（始终 JSON，含 GeoIP+ASN）；`ApiAdEnabled=true` 时附带 `ad` 字段 |
 | `X-Client: web` | text/plain | 纯 IP（响应头带 X-Ad-* 广告信息） |
 | `ApiAdEnabled=true` 且无 web 头 | text/plain | 两行：`广告文案 (URL)\n纯IP` |
 | `ApiAdEnabled=false` 且无 web 头 | text/plain | 纯 IP |

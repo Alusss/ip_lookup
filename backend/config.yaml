@@ -26,10 +26,10 @@ rate_global_burst: 5000      # 全局突发上限（推荐值；通常等于 rat
 rate_cleanup_interval: 10m    # 过期 limiter 清理周期（推荐值）
 
 # -----------------------------------------------------------------------------
-# API 广告（curl 等非浏览器客户端看到的纯文本广告）
+# API 广告（curl 纯文本响应 + / 与 /all 的 JSON 响应 ad 字段）
 # -----------------------------------------------------------------------------
-api_ad_enabled: true         # 是否在纯文本响应中附带广告
-api_ad_text_zh: "🔥 阿里云省钱攻略，大额优惠券领取通道 >>了解详情 ↗"
+api_ad_enabled: true         # 是否在纯文本响应与 JSON 响应中附带广告
+api_ad_text_zh: "🔥 阿里云省钱攻略，大额优惠券领取通道 ↗"
 api_ad_url_zh: "https://www.aliyun.com/minisite/goods?userCode=lj93i1wd"
 api_ad_text_en: "Recommended VPN service for privacy"
 api_ad_url_en: "https://example.com/en/vpn"
@@ -38,7 +38,7 @@ api_ad_url_en: "https://example.com/en/vpn"
 # Web 广告（浏览器页面顶部广告栏，通过 X-Ad-* 头下发）
 # -----------------------------------------------------------------------------
 web_ad_enabled: true
-web_ad_text_zh: "🔥 阿里云省钱攻略，大额优惠券领取通道 >>了解详情 ↗"
+web_ad_text_zh: "🔥 阿里云省钱攻略，大额优惠券领取通道 ↗"
 web_ad_url_zh: "https://www.aliyun.com/minisite/goods?userCode=lj93i1wd"
 web_ad_text_en: "Recommended VPN service for privacy"
 web_ad_url_en: "https://example.com/en/vpn"

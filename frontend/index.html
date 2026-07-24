@@ -54,7 +54,7 @@ main{display:flex;flex-direction:column}
 .ip-display .status-msg.success{color:var(--success)}
 .ip-display .status-msg.error{color:var(--error)}
 .ip-display .status-msg.idle{opacity:0}
-.geo-line{font-size:13px;color:var(--text-secondary);margin-top:6px;min-height:18px}
+.geo-line{font-size:13px;color:var(--text-secondary);margin-top:6px;min-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .geo-line:empty{min-height:0;margin-top:0}
 .actions{display:flex;gap:12px;justify-content:center;margin-top:20px}
 .btn.loading .btn-text{opacity:.7}
@@ -73,7 +73,8 @@ footer{margin-top:24px;padding:0 0 16px;text-align:center;color:var(--text-secon
 .footer-main a:hover{color:var(--text)}
 .footer-filing{font-size:11px;opacity:.7;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
 .footer-filing.hidden{display:none}
-.footer-filing img{width:14px;height:14px;vertical-align:middle}
+.footer-filing img{width:14px;height:14px;flex-shrink:0}
+.footer-filing .gongan-badge{display:inline-flex;align-items:center;gap:4px}
 @media(max-width:480px){.container{padding:20px 14px 16px}.logo{gap:10px}.logo svg{width:48px;height:48px}.logo h1{font-size:36px}.ip-display .ip-address{font-size:26px}header p{font-size:15px}}
 </style>
 <script src="js/i18n.js"></script>
