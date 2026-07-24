@@ -8,7 +8,18 @@
 - **GeoIP 显示格式区分中英文**：中文页面显示「国家名·城市名 | ASN」，英文页面显示「City, Country | ASN」
 - **geo-line 移动端溢出处理**：长 ASN 文本单行截断显示省略号，`title` 属性提供完整内容悬停查看
 - **IPv6 地理信息复用 IPv4 数据**：IPv6 GeoIP 库精度不如 IPv4，前端在 IPv6 连通性确认后，直接用 IPv4 的 geo/ASN 结果填充 IPv6 卡片，省去一次 IPv6 geo 请求且数据更精确
+- **Alertmanager 兼容 webhook 告警**：自检告警全面切换为 Alertmanager v4 webhook JSON schema（`version`/`groupKey`/`status`/`labels`/`annotations`/`fingerprint` 等标准字段），支持多目标推送、Bearer 认证、告警恢复（resolved）追踪
 - `openapi.yaml` 升至 v1.3.0（`/` 与 `/all` JSON 响应新增 `ad` 属性）
+
+### Changed
+
+- **监控告警配置格式**：`alert_webhook_url` + `alert_webhook_type` 替换为 `webhook_configs[...]`（数组，支持多目标 + `send_resolved` + `http_config.authorization`），`send_resolved` 未指定时默认 `true`
+- **告警状态追踪**：新增 `isActive`/`startedAt` 状态跟踪，阈值恢复时自动发送 `resolved` 通知（可按 webhook 独立关闭）
+
+### Removed
+
+- 移除 `alert_webhook_url`、`alert_webhook_type` 配置字段及对应环境变量 `MONITORING_WEBHOOK_URL`、`MONITORING_WEBHOOK_TYPE`
+- 移除 `dingtalk` 定制 payload 格式，统一为 Alertmanager 标准 JSON（外部 Adapter 可转发到钉钉/飞书等）
 
 ### Fixed
 

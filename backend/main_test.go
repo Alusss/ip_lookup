@@ -715,10 +715,364 @@ func TestMonitoringDisabledByDefault(t *testing.T) {
 	if cfg.Monitoring.Enabled {
 		t.Error("monitoring should be disabled by default")
 	}
-	if cfg.Monitoring.AlertWebhookURL != "" {
-		t.Error("webhook URL should be empty by default")
+	if len(cfg.Monitoring.WebhookConfigs) != 0 {
+		t.Error("webhook_configs should be empty by default")
 	}
-	if cfg.Monitoring.AlertWebhookType != "generic" {
-		t.Error("webhook type should be 'generic' by default")
+}
+
+func TestBuildPayloadFiring(t *testing.T) {
+	cfg := DefaultConfig()
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	ts := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
+	payload := monitor.buildPayload("error_rate", "Error rate 8.50% exceeds threshold 5.00%", "0.0850", "0.0500", ts, "firing")
+
+	if payload.Version != "4" {
+		t.Errorf("expected version 4, got %s", payload.Version)
 	}
+	if payload.Status != "firing" {
+		t.Errorf("expected status firing, got %s", payload.Status)
+	}
+	if payload.Receiver != "ip-lookup" {
+		t.Errorf("expected receiver ip-lookup, got %s", payload.Receiver)
+	}
+	if len(payload.Alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(payload.Alerts))
+	}
+	alert := payload.Alerts[0]
+	if alert.Status != "firing" {
+		t.Errorf("expected alert status firing, got %s", alert.Status)
+	}
+	if alert.Labels["alertname"] != "error_rate" {
+		t.Errorf("expected alertname error_rate, got %s", alert.Labels["alertname"])
+	}
+	if alert.Labels["severity"] != "warning" {
+		t.Errorf("expected severity warning, got %s", alert.Labels["severity"])
+	}
+	if alert.Annotations["summary"] != "Error rate 8.50% exceeds threshold 5.00%" {
+		t.Errorf("unexpected summary: %s", alert.Annotations["summary"])
+	}
+	if alert.StartsAt != "2026-07-24T12:00:00Z" {
+		t.Errorf("expected startsAt 2026-07-24T12:00:00Z, got %s", alert.StartsAt)
+	}
+	if alert.EndsAt != "0001-01-01T00:00:00Z" {
+		t.Errorf("expected endsAt zero time for firing, got %s", alert.EndsAt)
+	}
+	if alert.Fingerprint == "" {
+		t.Error("expected non-empty fingerprint")
+	}
+}
+
+func TestBuildPayloadResolved(t *testing.T) {
+	cfg := DefaultConfig()
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	ts := time.Date(2026, 7, 24, 12, 0, 0, 0, time.UTC)
+	payload := monitor.buildPayload("error_rate", "Error rate resolved", "0.01", "0.05", ts, "resolved")
+
+	if payload.Status != "resolved" {
+		t.Errorf("expected status resolved, got %s", payload.Status)
+	}
+	if len(payload.Alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(payload.Alerts))
+	}
+	alert := payload.Alerts[0]
+	if alert.Status != "resolved" {
+		t.Errorf("expected alert status resolved, got %s", alert.Status)
+	}
+	if alert.EndsAt == "0001-01-01T00:00:00Z" {
+		t.Error("expected non-zero endsAt for resolved alert")
+	}
+}
+
+func TestMonitorFiringAndResolved(t *testing.T) {
+	receivedCh := make(chan alertmanagerPayload, 10)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var p alertmanagerPayload
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		receivedCh <- p
+	}))
+	defer server.Close()
+
+	cfg := DefaultConfig()
+	cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+		{URL: server.URL},
+	}
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.1", "0.05")
+
+	select {
+	case p := <-receivedCh:
+		if p.Status != "firing" {
+			t.Errorf("expected firing, got %s", p.Status)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for firing webhook")
+	}
+
+	monitor.checkThreshold("error_rate", false, "msg", "0.01", "0.05")
+
+	select {
+	case p := <-receivedCh:
+		if p.Status != "resolved" {
+			t.Errorf("expected resolved, got %s", p.Status)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for resolved webhook")
+	}
+}
+
+func TestMonitorSendResolvedFalse(t *testing.T) {
+	receivedCh := make(chan alertmanagerPayload, 10)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var p alertmanagerPayload
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		receivedCh <- p
+	}))
+	defer server.Close()
+
+	sendResolved := false
+	cfg := DefaultConfig()
+	cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+		{URL: server.URL, SendResolved: &sendResolved},
+	}
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.1", "0.05")
+
+	select {
+	case p := <-receivedCh:
+		if p.Status != "firing" {
+			t.Errorf("expected firing, got %s", p.Status)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for firing webhook")
+	}
+
+	monitor.checkThreshold("error_rate", false, "msg", "0.01", "0.05")
+
+	select {
+	case p := <-receivedCh:
+		t.Errorf("expected no resolved webhook, but got: %+v", p)
+	case <-time.After(200 * time.Millisecond):
+	}
+}
+
+func TestMonitorMultipleWebhookTargets(t *testing.T) {
+	ch1 := make(chan alertmanagerPayload, 5)
+	ch2 := make(chan alertmanagerPayload, 5)
+
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var p alertmanagerPayload
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		ch1 <- p
+	}))
+	defer server1.Close()
+
+	server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var p alertmanagerPayload
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		ch2 <- p
+	}))
+	defer server2.Close()
+
+	cfg := DefaultConfig()
+	cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+		{URL: server1.URL},
+		{URL: server2.URL},
+	}
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.1", "0.05")
+
+	for i, ch := range []chan alertmanagerPayload{ch1, ch2} {
+		select {
+		case p := <-ch:
+			if p.Status != "firing" {
+				t.Errorf("server %d: expected firing, got %s", i, p.Status)
+			}
+		case <-time.After(2 * time.Second):
+			t.Errorf("server %d: timeout waiting for webhook", i)
+		}
+	}
+}
+
+func TestMonitorAuthHeader(t *testing.T) {
+	var authHeader string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authHeader = r.Header.Get("Authorization")
+	}))
+	defer server.Close()
+
+	cfg := DefaultConfig()
+	cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+		{
+			URL: server.URL,
+			HTTPConfig: &WebhookHTTPConfig{
+				Authorization: &WebhookAuthConfig{
+					Type:        "Bearer",
+					Credentials: "my-secret-token",
+				},
+			},
+		},
+	}
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.1", "0.05")
+
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case <-deadline:
+			t.Fatal("timeout waiting for webhook")
+		default:
+		}
+		if authHeader != "" {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	if authHeader != "Bearer my-secret-token" {
+		t.Errorf("expected 'Bearer my-secret-token', got %q", authHeader)
+	}
+}
+
+func TestMonitorCooldown(t *testing.T) {
+	receivedCh := make(chan alertmanagerPayload, 10)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var p alertmanagerPayload
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		receivedCh <- p
+	}))
+	defer server.Close()
+
+	cfg := DefaultConfig()
+	cfg.Monitoring.AlertCooldown = 1 * time.Hour
+	cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+		{URL: server.URL},
+	}
+	monitor := NewMonitor(cfg, NewMetrics())
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.1", "0.05")
+
+	select {
+	case <-receivedCh:
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout waiting for first firing")
+	}
+
+	monitor.checkThreshold("error_rate", true, "msg", "0.15", "0.05")
+
+	select {
+	case p := <-receivedCh:
+		t.Errorf("expected no repeat within cooldown, got: %+v", p)
+	case <-time.After(200 * time.Millisecond):
+	}
+}
+
+func TestWebhookConfigValidation(t *testing.T) {
+	t.Run("empty URL", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Monitoring.WebhookConfigs = []WebhookConfig{{URL: ""}}
+		err := cfg.validate()
+		if err == nil {
+			t.Error("expected error for empty URL")
+		}
+	})
+
+	t.Run("invalid URL scheme", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Monitoring.WebhookConfigs = []WebhookConfig{{URL: "ftp://example.com"}}
+		err := cfg.validate()
+		if err == nil {
+			t.Error("expected error for non-http(s) URL")
+		}
+	})
+
+	t.Run("invalid auth type", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+			{
+				URL: "https://example.com/hook",
+				HTTPConfig: &WebhookHTTPConfig{
+					Authorization: &WebhookAuthConfig{
+						Type:        "Basic",
+						Credentials: "token",
+					},
+				},
+			},
+		}
+		err := cfg.validate()
+		if err == nil {
+			t.Error("expected error for non-Bearer auth type")
+		}
+	})
+
+	t.Run("valid config", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+			{
+				URL: "https://example.com/hook",
+				HTTPConfig: &WebhookHTTPConfig{
+					Authorization: &WebhookAuthConfig{
+						Type:        "Bearer",
+						Credentials: "token",
+					},
+				},
+			},
+		}
+		err := cfg.validate()
+		if err != nil {
+			t.Errorf("expected no error, got: %v", err)
+		}
+	})
+
+	t.Run("empty auth type defaults to Bearer", func(t *testing.T) {
+		cfg := DefaultConfig()
+		cfg.Monitoring.WebhookConfigs = []WebhookConfig{
+			{
+				URL: "https://example.com/hook",
+				HTTPConfig: &WebhookHTTPConfig{
+					Authorization: &WebhookAuthConfig{
+						Type:        "",
+						Credentials: "token",
+					},
+				},
+			},
+		}
+		err := cfg.validate()
+		if err != nil {
+			t.Errorf("expected no error, got: %v", err)
+		}
+		if cfg.Monitoring.WebhookConfigs[0].HTTPConfig.Authorization.Type != "Bearer" {
+			t.Errorf("expected type defaulted to Bearer, got %s", cfg.Monitoring.WebhookConfigs[0].HTTPConfig.Authorization.Type)
+		}
+	})
+}
+
+func TestWebhookSendResolvedDefault(t *testing.T) {
+	t.Run("nil defaults to true", func(t *testing.T) {
+		wc := WebhookConfig{URL: "https://example.com"}
+		if !wc.ShouldSendResolved() {
+			t.Error("expected default true when SendResolved is nil")
+		}
+	})
+
+	t.Run("explicit true", func(t *testing.T) {
+		v := true
+		wc := WebhookConfig{URL: "https://example.com", SendResolved: &v}
+		if !wc.ShouldSendResolved() {
+			t.Error("expected true")
+		}
+	})
+
+	t.Run("explicit false", func(t *testing.T) {
+		v := false
+		wc := WebhookConfig{URL: "https://example.com", SendResolved: &v}
+		if wc.ShouldSendResolved() {
+			t.Error("expected false")
+		}
+	})
 }

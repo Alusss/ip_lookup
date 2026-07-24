@@ -74,8 +74,8 @@
 
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
-| `{{METRICS_LISTEN_ADDR}}` | `127.0.0.1:9090` | Prometheus 指标监听地址（仅本地可达） |
-| `{{PROMETHEUS_PORT}}` | `9090` | Prometheus 指标端口（legacy，见 METRICS_LISTEN_ADDR） |
+| `{{METRICS_LISTEN_ADDR}}` | `127.0.0.1:20013` | Prometheus 指标监听地址（仅本地可达） |
+| `{{PROMETHEUS_PORT}}` | `20013` | Prometheus 指标端口（legacy，见 METRICS_LISTEN_ADDR） |
 
 ---
 
@@ -84,8 +84,8 @@
 | 变量名 | 默认值 | 说明 |
 |--------|--------|------|
 | `{{MONITORING_ENABLED}}` | `false` | 自监控总开关（默认关闭，调试阶段保持关闭） |
-| `{{MONITORING_WEBHOOK_URL}}` | ``（空） | Webhook 推送地址（留空不推送） |
-| `{{MONITORING_WEBHOOK_TYPE}}` | `generic` | Webhook 推送格式：`generic`（通用 JSON）或 `dingtalk`（钉钉消息） |
+
+> Webhook 目标通过 `config.yaml` 的 `monitoring.webhook_configs` 数组配置（Alertmanager v4 兼容格式），不支持环境变量覆盖。
 
 ---
 
@@ -122,4 +122,5 @@
 - 2026-07-22: 初始版本（v0.1）
 - 2026-07-22: 拆分 API 广告与 Web 广告配置，增加 GeoIP/JSON API 配置
 - 2026-07-23: 增加自监控告警配置（MONITORING_ENABLED / MONITORING_WEBHOOK_URL / MONITORING_WEBHOOK_TYPE）
+- 2026-07-24: webhook 改为 Alertmanager v4 兼容格式，移除 MONITORING_WEBHOOK_URL / MONITORING_WEBHOOK_TYPE 环境变量，webhook 配置仅支持 YAML
 - 2026-07-23: 增加限速开关/策略（RATE_ENABLED / RATE_MODE）、/all 路由（ALL_API_ENABLED）、CF 访问控制（CF_CIDR_PATH / CF_CIDR_RELOAD_INTERVAL / CF_ONLY）、GeoIP ASN（GEOIP_ASN_DB_PATH）；修正全局限流默认值 1000->5000

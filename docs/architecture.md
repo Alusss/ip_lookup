@@ -12,7 +12,7 @@ flowchart LR
     ORIG6 --> GOv6["Go Backend<br/>[::1]:8081"]
     GOv4 -->|slog + lumberjack| LOG["日志轮转<br/>/var/log/ip-lookup/"]
     GOv4 -->|/metrics| MON["Prometheus 指标<br/>(含状态码/延迟分布)"]
-    GOv4 -.->|自监控引擎<br/>阈值检查+Webhook| ALERT["告警通知<br/>generic / DingTalk"]
+    GOv4 -.->|自监控引擎<br/>阈值检查+Webhook| ALERT["告警通知<br/>Alertmanager v4"]
     GOv4 -->|geoip2-golang| GEO["GeoLite2 City<br/>.mmdb 文件<br/>fsnotify 热加载"]
     PAGES -.fetch ip4.iohow.com.-> ORIG4
     PAGES -.fetch ip6.iohow.com.-> ORIG6
@@ -105,7 +105,7 @@ RemoteAddr → 检查来源 IP ∈ CF CIDR？
 | `/health` | 存活检查 |
 | `/readyz` | 就绪检查 |
 | `/metrics` | Prometheus 指标（请求数/限流/在线连接/关闭耗时 + 按状态码计数 + 延迟分布直方图 + 运行时间） |
-| 自监控引擎 | 内置周期检查：错误率、P99 延迟、限流命中率 → 超阈值时日志 WARN + Webhook 推送（generic/dingtalk） |
+| 自监控引擎 | 内置周期检查：错误率、P99 延迟、限流命中率 → 超阈值时日志 WARN + Webhook 推送（Alertmanager v4） |
 
 ## 8. 部署架构
 

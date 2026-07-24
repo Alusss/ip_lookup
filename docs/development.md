@@ -52,7 +52,7 @@ ip-lookup/
 │   ├── metrics.go      # Prometheus 指标（含状态码/延迟分布/运行时间）
 │   ├── middleware.go   # HTTP 中间件链（requestID → realIP → recovery → securityHeaders → metrics(连接数) → methodCheck → bodyRejection → denylist → connLimit → cors → logging(计数+延迟+状态码)）
 │   ├── errors.go       # 错误消息集中管理
-│   ├── monitor.go      # 自监控告警引擎（阈值检查 + Webhook 推送）
+│   ├── monitor.go      # 自监控告警引擎（阈值检查 + Alertmanager v4 Webhook）
 │   ├── main_test.go    # 单元测试 + E2E 集成测试
 │   └── config.yaml     # 默认配置
 ├── frontend/           # 前端静态文件

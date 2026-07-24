@@ -100,8 +100,15 @@ monitoring:
   enabled: true                       # 是否启用自检告警
   check_interval: 60s                  # 自检周期（推荐值）
   alert_cooldown: 10m                  # 同一告警冷却时间（推荐值）
-  alert_webhook_url: ""                # 告警 webhook 地址，留空则不推送
-  alert_webhook_type: "generic"        # generic | feishu | dingtalk
+  # Alertmanager 兼容的 webhook 配置（支持多目标）
+  # 留空则不推送；配置后按 Alertmanager v4 webhook 格式发送
+  webhook_configs:
+    # - url: "https://your-domain/your-path/alertmanager"
+    #   send_resolved: true              # 未指定时默认 true
+    #   http_config:
+    #     authorization:
+    #       type: Bearer
+    #       credentials: "YOUR_ADAPTER_TOKEN"
   error_rate_threshold: 0.05           # 错误率告警阈值（推荐值 5%）
   p99_latency_threshold_ms: 2000       # P99 延迟告警阈值（推荐值 2s）
   rate_limit_hit_rate_threshold: 0.10  # 限速命中率告警阈值（推荐值 10%）

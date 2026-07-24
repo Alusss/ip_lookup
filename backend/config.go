@@ -14,15 +14,36 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type WebhookConfig struct {
+	URL          string             `yaml:"url"`
+	SendResolved *bool              `yaml:"send_resolved,omitempty"`
+	HTTPConfig   *WebhookHTTPConfig `yaml:"http_config,omitempty"`
+}
+
+type WebhookHTTPConfig struct {
+	Authorization *WebhookAuthConfig `yaml:"authorization,omitempty"`
+}
+
+type WebhookAuthConfig struct {
+	Type        string `yaml:"type"`
+	Credentials string `yaml:"credentials"`
+}
+
+func (wc *WebhookConfig) ShouldSendResolved() bool {
+	if wc.SendResolved == nil {
+		return true
+	}
+	return *wc.SendResolved
+}
+
 type MonitoringConfig struct {
-	Enabled       bool          `yaml:"enabled"`
-	CheckInterval time.Duration `yaml:"check_interval"`
-	AlertCooldown time.Duration `yaml:"alert_cooldown"`
-	AlertWebhookURL string     `yaml:"alert_webhook_url"`
-	AlertWebhookType string    `yaml:"alert_webhook_type"`
-	ErrorRateThreshold   float64 `yaml:"error_rate_threshold"`
-	P99LatencyThresholdMs int64 `yaml:"p99_latency_threshold_ms"`
-	RateLimitHitRateThreshold float64 `yaml:"rate_limit_hit_rate_threshold"`
+	Enabled                   bool            `yaml:"enabled"`
+	CheckInterval             time.Duration   `yaml:"check_interval"`
+	AlertCooldown             time.Duration   `yaml:"alert_cooldown"`
+	WebhookConfigs            []WebhookConfig `yaml:"webhook_configs,omitempty"`
+	ErrorRateThreshold        float64         `yaml:"error_rate_threshold"`
+	P99LatencyThresholdMs     int64           `yaml:"p99_latency_threshold_ms"`
+	RateLimitHitRateThreshold float64         `yaml:"rate_limit_hit_rate_threshold"`
 }
 
 type ConfigValues struct {
@@ -31,13 +52,13 @@ type ConfigValues struct {
 	PortV4       int    `yaml:"port_v4"`
 	PortV6       int    `yaml:"port_v6"`
 
-	RateEnabled            bool          `yaml:"rate_enabled"`
-	RatePerIP              int           `yaml:"rate_per_ip"`
-	RatePerIPBurst         int           `yaml:"rate_per_ip_burst"`
-	RateGlobal             int           `yaml:"rate_global"`
-	RateGlobalBurst        int           `yaml:"rate_global_burst"`
-	RateMode               string        `yaml:"rate_mode"`
-	RateCleanupInterval    time.Duration `yaml:"rate_cleanup_interval"`
+	RateEnabled         bool          `yaml:"rate_enabled"`
+	RatePerIP           int           `yaml:"rate_per_ip"`
+	RatePerIPBurst      int           `yaml:"rate_per_ip_burst"`
+	RateGlobal          int           `yaml:"rate_global"`
+	RateGlobalBurst     int           `yaml:"rate_global_burst"`
+	RateMode            string        `yaml:"rate_mode"`
+	RateCleanupInterval time.Duration `yaml:"rate_cleanup_interval"`
 
 	ApiAdEnabled bool   `yaml:"api_ad_enabled"`
 	ApiAdTextZh  string `yaml:"api_ad_text_zh"`
@@ -51,31 +72,31 @@ type ConfigValues struct {
 	WebAdTextEn  string `yaml:"web_ad_text_en"`
 	WebAdUrlEn   string `yaml:"web_ad_url_en"`
 
-	LogLevel         string `yaml:"log_level"`
-	LogFileMaxSize   int    `yaml:"log_file_max_size"`
-	LogFileMaxAge    int    `yaml:"log_file_max_age"`
-	LogFileBackups   int    `yaml:"log_file_backups"`
-	LogIpMasking     bool   `yaml:"log_ip_masking"`
+	LogLevel       string `yaml:"log_level"`
+	LogFileMaxSize int    `yaml:"log_file_max_size"`
+	LogFileMaxAge  int    `yaml:"log_file_max_age"`
+	LogFileBackups int    `yaml:"log_file_backups"`
+	LogIpMasking   bool   `yaml:"log_ip_masking"`
 
 	CorsEnabled    bool `yaml:"cors_enabled"`
 	JsonApiEnabled bool `yaml:"json_api_enabled"`
 	AllApiEnabled  bool `yaml:"all_api_enabled"`
 
-	ShutdownTimeout    time.Duration `yaml:"shutdown_timeout"`
-	MaxHeaderBytes     int           `yaml:"max_header_bytes"`
-	ReadTimeout        time.Duration `yaml:"read_timeout"`
-	ReadHeaderTimeout  time.Duration `yaml:"read_header_timeout"`
-	WriteTimeout       time.Duration `yaml:"write_timeout"`
-	IdleTimeout        time.Duration `yaml:"idle_timeout"`
-	MaxConnsPerIP      int           `yaml:"max_conns_per_ip"`
+	ShutdownTimeout   time.Duration `yaml:"shutdown_timeout"`
+	MaxHeaderBytes    int           `yaml:"max_header_bytes"`
+	ReadTimeout       time.Duration `yaml:"read_timeout"`
+	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
+	WriteTimeout      time.Duration `yaml:"write_timeout"`
+	IdleTimeout       time.Duration `yaml:"idle_timeout"`
+	MaxConnsPerIP     int           `yaml:"max_conns_per_ip"`
 
 	TrustedProxyCIDRs string `yaml:"trusted_proxy_cidrs"`
 	IPDenylist        string `yaml:"ip_denylist"`
 	UADenylist        string `yaml:"ua_denylist"`
 
-	CfCidrPath            string        `yaml:"cf_cidr_path"`
-	CfCidrReloadInterval  time.Duration `yaml:"cf_cidr_reload_interval"`
-	CfOnly                bool          `yaml:"cf_only"`
+	CfCidrPath           string        `yaml:"cf_cidr_path"`
+	CfCidrReloadInterval time.Duration `yaml:"cf_cidr_reload_interval"`
+	CfOnly               bool          `yaml:"cf_only"`
 
 	GeoipEnabled   bool   `yaml:"geoip_enabled"`
 	GeoipDbPath    string `yaml:"geoip_db_path"`
@@ -103,13 +124,13 @@ func DefaultConfig() *Config {
 			PortV4:       8080,
 			PortV6:       8081,
 
-			RateEnabled:            true,
-			RatePerIP:              10,
-			RatePerIPBurst:         5,
-			RateGlobal:             5000,
-			RateGlobalBurst:        5000,
-			RateMode:               "both",
-			RateCleanupInterval:    5 * time.Minute,
+			RateEnabled:         true,
+			RatePerIP:           10,
+			RatePerIPBurst:      5,
+			RateGlobal:          5000,
+			RateGlobalBurst:     5000,
+			RateMode:            "both",
+			RateCleanupInterval: 5 * time.Minute,
 
 			ApiAdEnabled: true,
 			ApiAdTextZh:  "推荐使用可靠的VPN服务保护您的隐私",
@@ -129,9 +150,9 @@ func DefaultConfig() *Config {
 			LogFileBackups: 7,
 			LogIpMasking:   true,
 
-		CorsEnabled:     true,
-		JsonApiEnabled:  true,
-		AllApiEnabled:   false,
+			CorsEnabled:    true,
+			JsonApiEnabled: true,
+			AllApiEnabled:  false,
 
 			ShutdownTimeout:   15 * time.Second,
 			MaxHeaderBytes:    1024,
@@ -141,24 +162,22 @@ func DefaultConfig() *Config {
 			IdleTimeout:       60 * time.Second,
 			MaxConnsPerIP:     8,
 
-		CfCidrPath:           "/etc/ip-lookup/cf-cidrs.txt",
-		CfCidrReloadInterval: 5 * time.Minute,
-		CfOnly:               false,
+			CfCidrPath:           "/etc/ip-lookup/cf-cidrs.txt",
+			CfCidrReloadInterval: 5 * time.Minute,
+			CfOnly:               false,
 
-		GeoipEnabled:   false,
-		GeoipDbPath:    "/var/lib/ip-lookup/GeoLite2-City.mmdb",
-		GeoipAsnDbPath: "/var/lib/ip-lookup/GeoLite2-ASN.mmdb",
+			GeoipEnabled:   false,
+			GeoipDbPath:    "/var/lib/ip-lookup/GeoLite2-City.mmdb",
+			GeoipAsnDbPath: "/var/lib/ip-lookup/GeoLite2-ASN.mmdb",
 
-			MetricsListenAddr: "127.0.0.1:9090",
+			MetricsListenAddr: "127.0.0.1:20013",
 
 			Monitoring: MonitoringConfig{
-				Enabled:                  false,
-				CheckInterval:            60 * time.Second,
-				AlertCooldown:            10 * time.Minute,
-				AlertWebhookURL:          "",
-				AlertWebhookType:         "generic",
-				ErrorRateThreshold:       0.05,
-				P99LatencyThresholdMs:    2000,
+				Enabled:                   false,
+				CheckInterval:             60 * time.Second,
+				AlertCooldown:             10 * time.Minute,
+				ErrorRateThreshold:        0.05,
+				P99LatencyThresholdMs:     2000,
 				RateLimitHitRateThreshold: 0.10,
 			},
 		},
@@ -199,6 +218,23 @@ func (cfg *Config) validate() error {
 	case "both", "per_ip", "global":
 	default:
 		return fmt.Errorf("invalid rate_mode %q (must be both|per_ip|global)", cfg.RateMode)
+	}
+	for i, wc := range cfg.Monitoring.WebhookConfigs {
+		if wc.URL == "" {
+			return fmt.Errorf("monitoring.webhook_configs[%d].url must not be empty", i)
+		}
+		parsed, err := url.Parse(wc.URL)
+		if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			return fmt.Errorf("monitoring.webhook_configs[%d].url must be a valid http(s) URL, got %q", i, wc.URL)
+		}
+		if wc.HTTPConfig != nil && wc.HTTPConfig.Authorization != nil {
+			t := wc.HTTPConfig.Authorization.Type
+			if t == "" {
+				wc.HTTPConfig.Authorization.Type = "Bearer"
+			} else if t != "Bearer" {
+				return fmt.Errorf("monitoring.webhook_configs[%d].http_config.authorization.type must be \"Bearer\", got %q", i, t)
+			}
+		}
 	}
 	return nil
 }
@@ -348,12 +384,6 @@ func overrideFromEnv(cfg *Config) {
 	}
 	if v := os.Getenv("MONITORING_ENABLED"); v != "" {
 		cfg.Monitoring.Enabled = v == "true" || v == "1"
-	}
-	if v := os.Getenv("MONITORING_WEBHOOK_URL"); v != "" {
-		cfg.Monitoring.AlertWebhookURL = v
-	}
-	if v := os.Getenv("MONITORING_WEBHOOK_TYPE"); v != "" {
-		cfg.Monitoring.AlertWebhookType = v
 	}
 }
 

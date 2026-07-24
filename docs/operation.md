@@ -19,7 +19,7 @@ journalctl -u ip-lookup -f --since "5 min ago"
 ### 指标
 
 ```bash
-curl localhost:9090/metrics
+curl localhost:20013/metrics
 ```
 
 指标清单：
@@ -116,8 +116,13 @@ monitoring:
   enabled: false                    # 总开关，默认关闭（调试阶段保持关闭）
   check_interval: 60s               # 检查周期
   alert_cooldown: 10m               # 告警冷却时间，防止重复告警
-  alert_webhook_url: ""             # Webhook 地址，留空不发送
-  alert_webhook_type: "generic"     # 推送格式：generic 或 dingtalk
+  webhook_configs:                  # Alertmanager 兼容 webhook（支持多目标）
+    - url: "https://your-domain/your-path/alertmanager"
+      send_resolved: true           # 未指定时默认 true
+      http_config:
+        authorization:
+          type: Bearer
+          credentials: "YOUR_ADAPTER_TOKEN"
   error_rate_threshold: 0.05        # 5xx 错误率阈值（5%）
   p99_latency_threshold_ms: 2000    # P99 延迟阈值（2000ms）
   rate_limit_hit_rate_threshold: 0.10  # 限流命中率阈值（10%）
@@ -127,31 +132,67 @@ monitoring:
 
 阈值超限时：
 1. 日志输出 `WARN` 级别告警，含指标名、当前值、阈值
-2. 若配置了 `alert_webhook_url`，异步发送 webhook 请求
+2. 遍历 `webhook_configs`，异步发送 Alertmanager v4 格式 webhook 请求
+3. 阈值恢复时，若 webhook 的 `send_resolved` 为 `true`（默认），发送 `resolved` 通知
 
-### Webhook 格式
+### Webhook 负载格式（Alertmanager v4）
 
-**generic（默认）：**
 ```json
 {
-  "title": "[ip-lookup] error_rate",
-  "message": "Error rate 10.00% exceeds threshold 5.00%",
-  "metric": "error_rate",
-  "value": "0.1000",
-  "threshold": "0.0500",
-  "severity": "warning",
-  "timestamp": "2026-07-23T10:00:00Z"
+  "version": "4",
+  "groupKey": "{}:{alertname=\"error_rate\"}",
+  "status": "firing",
+  "receiver": "ip-lookup",
+  "groupLabels": {},
+  "commonLabels": {
+    "alertname": "error_rate",
+    "severity": "warning",
+    "instance": "ip-lookup"
+  },
+  "commonAnnotations": {
+    "summary": "Error rate 10.00% exceeds threshold 5.00%",
+    "value": "0.1000",
+    "threshold": "0.0500"
+  },
+  "externalURL": "",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "error_rate",
+        "severity": "warning",
+        "instance": "ip-lookup"
+      },
+      "annotations": {
+        "summary": "Error rate 10.00% exceeds threshold 5.00%",
+        "value": "0.1000",
+        "threshold": "0.0500"
+      },
+      "startsAt": "2026-07-24T12:00:00Z",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "",
+      "fingerprint": "a1b2c3d4e5f6a7b8"
+    }
+  ]
 }
 ```
 
-**dingtalk：**
-```json
-{
-  "msgtype": "text",
-  "text": {
-    "content": "[ip-lookup] error_rate\nError rate 10.00% exceeds threshold 5.00%\nValue: 0.1000, Threshold: 0.0500\nTime: 2026-07-23T10:00:00Z"
-  }
-}
+`status` 为 `firing` 时 `endsAt` 为零值；`resolved` 时 `endsAt` 为恢复时间。
+
+### 多目标推送
+
+`webhook_configs` 是数组，可配置多个目标。每个目标可独立设置 `send_resolved` 和 `http_config.authorization`：
+
+```yaml
+webhook_configs:
+  - url: "https://team-a.example.com/alertmanager"
+    send_resolved: true
+  - url: "https://team-b.example.com/alertmanager"
+    send_resolved: false
+    http_config:
+      authorization:
+        type: Bearer
+        credentials: "team-b-token"
 ```
 
 ### 环境变量覆盖
@@ -159,8 +200,8 @@ monitoring:
 | 变量 | 对应配置 |
 |------|----------|
 | `MONITORING_ENABLED` | `monitoring.enabled` |
-| `MONITORING_WEBHOOK_URL` | `monitoring.alert_webhook_url` |
-| `MONITORING_WEBHOOK_TYPE` | `monitoring.alert_webhook_type` |
+
+> `webhook_configs` 仅支持 YAML 配置，不提供环境变量覆盖。
 
 ---
 
@@ -203,6 +244,31 @@ grep geoip /etc/ip-lookup/config.yaml
 # 验证 API 返回
 curl -H "Accept: application/json" localhost:8080/
 ```
+
+### Webhook 告警问题
+
+```bash
+# 查看告警触发日志
+journalctl -u ip-lookup -g "self-monitoring" --since "1 hour ago"
+
+# 查看 webhook 发送结果
+journalctl -u ip-lookup -g "monitor: webhook" --since "1 hour ago"
+
+# 检查 webhook_configs 配置
+grep -A 10 'webhook_configs' /etc/ip-lookup/config.yaml
+
+# 手动测试 webhook 目标可达性（含 Bearer 认证）
+curl -X POST https://your-domain/your-path/alertmanager \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"version":"4","status":"firing","receiver":"ip-lookup","groupLabels":{},"commonLabels":{},"commonAnnotations":{},"externalURL":"","alerts":[]}'
+```
+
+常见原因：
+- `monitoring.enabled` 为 `false`
+- `webhook_configs[].url` 不可达或证书无效
+- `authorization.type` 非 `Bearer`（仅支持 Bearer）
+- `check_interval` 内流量不足，delta 为 0 未触发阈值计算
 
 ---
 

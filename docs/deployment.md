@@ -82,8 +82,13 @@ monitoring:
   enabled: true                    # 开启自监控
   check_interval: 60s              # 每 60 秒检查一次
   alert_cooldown: 10m              # 同一指标 10 分钟内不重复告警
-  alert_webhook_url: "https://your-webhook-gateway/alert"  # 推送地址
-  alert_webhook_type: "generic"    # generic 或 dingtalk
+  webhook_configs:                 # Alertmanager 兼容 webhook
+    - url: "https://your-domain/your-path/alertmanager"
+      send_resolved: true
+      http_config:
+        authorization:
+          type: Bearer
+          credentials: "YOUR_ADAPTER_TOKEN"
   error_rate_threshold: 0.05       # 5% 错误率告警
   p99_latency_threshold_ms: 2000   # P99 > 2s 告警
   rate_limit_hit_rate_threshold: 0.10  # 10% 限流率告警
@@ -93,9 +98,9 @@ monitoring:
 
 ```bash
 MONITORING_ENABLED=true
-MONITORING_WEBHOOK_URL=https://your-webhook-gateway/alert
-MONITORING_WEBHOOK_TYPE=generic
 ```
+
+> `webhook_configs` 仅支持 YAML 配置。
 
 ### 验证部署
 
@@ -114,7 +119,7 @@ curl -H "Accept: application/json" http://127.0.0.1:8080/   # → {"ip":"...","v
 curl http://127.0.0.1:8080/ad-config   # → {"web":{"enabled":true,...}}
 
 # 指标（独立端口，仅本地可达）
-curl http://127.0.0.1:9090/metrics
+curl http://127.0.0.1:20013/metrics
 
 # systemd 安全评分
 systemd-analyze security ip-lookup    # 目标 ≤ 3.0
