@@ -11,8 +11,8 @@
 # -----------------------------------------------------------------------------
 listen_addr_v4: 127.0.0.1   # IPv4 监听地址。反代部署保持 127.0.0.1；直连公网填 0.0.0.0
 listen_addr_v6: "::1"        # IPv6 监听地址。反代部署保持 ::1；直连公网填 ::
-port_v4: 8080                # IPv4 服务端口（推荐值）
-port_v6: 8081                # IPv6 服务端口（推荐值）
+port_v4: 20011                # IPv4 服务端口（推荐值）
+port_v6: 20012                # IPv6 服务端口（推荐值）
 
 # -----------------------------------------------------------------------------
 # 限速（令牌桶）
@@ -23,14 +23,14 @@ rate_per_ip: 10              # 单 IP 每分钟最大请求数（推荐值；公
 rate_per_ip_burst: 5         # 单 IP 突发上限（推荐值；通常为 rate_per_ip 的一半）
 rate_global: 5000            # 全局每秒最大请求数（推荐值；按机器容量调整）
 rate_global_burst: 5000      # 全局突发上限（推荐值；通常等于 rate_global）
-rate_cleanup_interval: 5m    # 过期 limiter 清理周期（推荐值）
+rate_cleanup_interval: 10m    # 过期 limiter 清理周期（推荐值）
 
 # -----------------------------------------------------------------------------
 # API 广告（curl 等非浏览器客户端看到的纯文本广告）
 # -----------------------------------------------------------------------------
 api_ad_enabled: true         # 是否在纯文本响应中附带广告
-api_ad_text_zh: "推荐使用可靠的VPN服务保护您的隐私"
-api_ad_url_zh: "https://example.com/zh/vpn"
+api_ad_text_zh: "🔥 阿里云省钱攻略，大额优惠券领取通道 >>了解详情 ↗"
+api_ad_url_zh: "https://www.aliyun.com/minisite/goods?userCode=lj93i1wd"
 api_ad_text_en: "Recommended VPN service for privacy"
 api_ad_url_en: "https://example.com/en/vpn"
 

@@ -7,7 +7,7 @@
 - **限速开关与策略**：`rate_enabled`（总开关，可临时关闭便于调试）、`rate_mode`（`both`/`per_ip`/`global`），均支持热加载
 - **CF 只接受来源**：`cf_only` 开关，开启后拒绝非 Cloudflare 边缘、非受信代理的直连请求（403），应用层防御纵深
 - **`/all` 路由**：`all_api_enabled` 开关，开启时始终返回含 city/country/isp/asn 的 JSON；关闭时行为与 `/` 一致
-- **GeoIP ASN**：新增 GeoLite2-ASN 库支持（`geoip_asn_db_path`），响应增加 `asn` 字段（`ASxxxx 组织名`）
+- **GeoIP ASN**：新增 GeoLite2-ASN 库支持（`geoip_asn_db_path`），响应增加 `asn` 字段（`ASxxxx 组织名`）；`update-geoip.sh` 同时下载 City + ASN（ASN 可选，失败仅告警）
 - **GeoIP 中文地名**：按 `Accept-Language` 返回 `zh-CN`/`en` 地名（MaxMind 原生本地化，回退 en）
 - **GeoIP 热重载**：`GeoIP.Configure()` 支持运行时切换开关/库路径无需重启；fsnotify watcher 懒启动
 - **CF CIDR 兜底定时器**：`cf_cidr_reload_interval`（默认 5m）周期重载，防 fsnotify 事件丢失
